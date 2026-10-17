@@ -539,6 +539,12 @@
         }
 
 
+        function combineAbsorption(a, b, c, d)
+        {
+            // Absorption stacks multiplicatively: each piece reduces the damage left by the others
+            return 100.0 * (1.0 - (1.0 - a / 100.0) * (1.0 - b / 100.0) * (1.0 - c / 100.0) * (1.0 - d / 100.0));
+        }
+
         function createArmorSet(helm, chest, gauntlets, legging)
         {
             helm = ref_armors.helms[helm];
@@ -556,15 +562,15 @@
                 legging_name:  legging.name,
                 legging_image: legging.image,
 
-                physicaldef:   helm.physicaldef + chest.physicaldef + gauntlets.physicaldef + legging.physicaldef,
-                strikedef:     helm.strikedef + chest.strikedef + gauntlets.strikedef + legging.strikedef,
-                slashdef:      helm.slashdef + chest.slashdef + gauntlets.slashdef + legging.slashdef,
-                thrustdef:     helm.thrustdef + chest.thrustdef + gauntlets.thrustdef + legging.thrustdef,
+                physicaldef:   combineAbsorption(helm.physicaldef, chest.physicaldef, gauntlets.physicaldef, legging.physicaldef),
+                strikedef:     combineAbsorption(helm.strikedef, chest.strikedef, gauntlets.strikedef, legging.strikedef),
+                slashdef:      combineAbsorption(helm.slashdef, chest.slashdef, gauntlets.slashdef, legging.slashdef),
+                thrustdef:     combineAbsorption(helm.thrustdef, chest.thrustdef, gauntlets.thrustdef, legging.thrustdef),
 
-                magicdef:      helm.magicdef + chest.magicdef + gauntlets.magicdef + legging.magicdef,
-                firedef:       helm.firedef + chest.firedef + gauntlets.firedef + legging.firedef,
-                lightningdef:  helm.lightningdef + chest.lightningdef + gauntlets.lightningdef + legging.lightningdef,
-                darkdef:       helm.darkdef + chest.darkdef + gauntlets.darkdef + legging.darkdef,
+                magicdef:      combineAbsorption(helm.magicdef, chest.magicdef, gauntlets.magicdef, legging.magicdef),
+                firedef:       combineAbsorption(helm.firedef, chest.firedef, gauntlets.firedef, legging.firedef),
+                lightningdef:  combineAbsorption(helm.lightningdef, chest.lightningdef, gauntlets.lightningdef, legging.lightningdef),
+                darkdef:       combineAbsorption(helm.darkdef, chest.darkdef, gauntlets.darkdef, legging.darkdef),
 
                 bleedres:      helm.bleedres + chest.bleedres + gauntlets.bleedres + legging.bleedres,
                 poisonres:     helm.poisonres + chest.poisonres + gauntlets.poisonres + legging.poisonres,
