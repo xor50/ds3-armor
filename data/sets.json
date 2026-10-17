@@ -1,0 +1,669 @@
+[
+    {
+        "name": "Alva Set",
+        "pieces": {
+            "helms": "Alva Helm",
+            "chests": "Alva Armor",
+            "gauntlets": "Alva Gauntlets",
+            "leggings": "Alva Leggings"
+        }
+    },
+    {
+        "name": "Antiquated Set",
+        "pieces": {
+            "chests": "Antiquated Dress",
+            "gauntlets": "Antiquated Gloves"
+        }
+    },
+    {
+        "name": "Archdeacon Set",
+        "pieces": {
+            "helms": "Archdeacon White Crown",
+            "chests": "Archdeacon Holy Garb",
+            "leggings": "Archdeacon Skirt"
+        }
+    },
+    {
+        "name": "Assassin Set",
+        "pieces": {
+            "helms": "Assassin Hood",
+            "chests": "Assassin Armor",
+            "gauntlets": "Assassin Gloves",
+            "leggings": "Assassin Trousers"
+        }
+    },
+    {
+        "name": "Black Set",
+        "pieces": {
+            "chests": "Black Dress",
+            "gauntlets": "Black Gauntlets",
+            "leggings": "Black Leggings"
+        }
+    },
+    {
+        "name": "Black Hand Set",
+        "pieces": {
+            "helms": "Black Hand Hat",
+            "chests": "Black Hand Armor"
+        }
+    },
+    {
+        "name": "Black Iron Set",
+        "pieces": {
+            "helms": "Black Iron Helm",
+            "chests": "Black Iron Armor",
+            "gauntlets": "Black Iron Gauntlets",
+            "leggings": "Black Iron Leggings"
+        }
+    },
+    {
+        "name": "Black Knight Set",
+        "pieces": {
+            "helms": "Black Knight Helm",
+            "chests": "Black Knight Armor",
+            "gauntlets": "Black Knight Gauntlets",
+            "leggings": "Black Knight Leggings"
+        }
+    },
+    {
+        "name": "Black Leather Set",
+        "pieces": {
+            "chests": "Black Leather Armor",
+            "gauntlets": "Black Leather Gloves",
+            "leggings": "Black Leather Boots"
+        }
+    },
+    {
+        "name": "Brass Set",
+        "pieces": {
+            "helms": "Brass Helm",
+            "chests": "Brass Armor",
+            "gauntlets": "Brass Gauntlets",
+            "leggings": "Brass Leggings"
+        }
+    },
+    {
+        "name": "Brigand Set",
+        "pieces": {
+            "helms": "Brigand Hood",
+            "chests": "Brigand Armor",
+            "gauntlets": "Brigand Gauntlets",
+            "leggings": "Brigand Trousers"
+        }
+    },
+    {
+        "name": "Catarina Set",
+        "pieces": {
+            "helms": "Catarina Helm",
+            "chests": "Catarina Armor",
+            "gauntlets": "Catarina Gauntlets",
+            "leggings": "Catarina Leggings"
+        }
+    },
+    {
+        "name": "Cathedral Knight Set",
+        "pieces": {
+            "helms": "Cathedral Knight Helm",
+            "chests": "Cathedral Knight Armor",
+            "gauntlets": "Cathedral Knight Gauntlets",
+            "leggings": "Cathedral Knight Leggings"
+        }
+    },
+    {
+        "name": "Chain Set",
+        "pieces": {
+            "helms": "Chain Helm",
+            "chests": "Chain Armor",
+            "leggings": "Chain Leggings"
+        }
+    },
+    {
+        "name": "Cleric Set",
+        "pieces": {
+            "helms": "Cleric Hat",
+            "chests": "Cleric Blue Robe",
+            "gauntlets": "Cleric Gloves",
+            "leggings": "Cleric Trousers"
+        }
+    },
+    {
+        "name": "Conjurator Set",
+        "pieces": {
+            "helms": "Conjurator Hood",
+            "chests": "Conjurator Robe",
+            "gauntlets": "Conjurator Manchettes",
+            "leggings": "Conjurator Boots"
+        }
+    },
+    {
+        "name": "Cornyx's Set",
+        "pieces": {
+            "chests": "Cornyx's Garb",
+            "gauntlets": "Cornyx's Wrap",
+            "leggings": "Cornyx's Skirt"
+        }
+    },
+    {
+        "name": "Court Sorcerer Set",
+        "pieces": {
+            "helms": "Court Sorcerer Hood",
+            "chests": "Court Sorcerer Robe",
+            "gauntlets": "Court Sorcerer Gloves",
+            "leggings": "Court Sorcerer Trousers"
+        }
+    },
+    {
+        "name": "Dancer's Set",
+        "pieces": {
+            "helms": "Dancer's Crown",
+            "chests": "Dancer's Armor",
+            "gauntlets": "Dancer's Gauntlets",
+            "leggings": "Dancer's Leggings"
+        }
+    },
+    {
+        "name": "Dark Set",
+        "pieces": {
+            "helms": "Dark Mask",
+            "chests": "Dark Armor",
+            "gauntlets": "Dark Gauntlets",
+            "leggings": "Dark Leggings"
+        }
+    },
+    {
+        "name": "Deacon Set",
+        "pieces": {
+            "chests": "Deacon Robe",
+            "leggings": "Deacon Skirt"
+        }
+    },
+    {
+        "name": "Deserter Set",
+        "pieces": {
+            "chests": "Deserter Armor",
+            "leggings": "Deserter Trousers"
+        }
+    },
+    {
+        "name": "Dragonscale Set",
+        "pieces": {
+            "chests": "Dragonscale Armor",
+            "leggings": "Dragonscale Waistcloth"
+        }
+    },
+    {
+        "name": "Dragonslayer Set",
+        "pieces": {
+            "helms": "Dragonslayer Helm",
+            "chests": "Dragonslayer Armor",
+            "gauntlets": "Dragonslayer Gauntlets",
+            "leggings": "Dragonslayer Leggings"
+        }
+    },
+    {
+        "name": "Drakeblood Set",
+        "pieces": {
+            "helms": "Drakeblood Helm",
+            "chests": "Drakeblood Armor",
+            "gauntlets": "Drakeblood Gauntlets",
+            "leggings": "Drakeblood Leggings"
+        }
+    },
+    {
+        "name": "Drang Set",
+        "pieces": {
+            "chests": "Drang Armor",
+            "gauntlets": "Drang Gauntlets",
+            "leggings": "Drang Shoes"
+        }
+    },
+    {
+        "name": "Eastern Set",
+        "pieces": {
+            "helms": "Eastern Helm",
+            "chests": "Eastern Armor",
+            "gauntlets": "Eastern Gauntlets",
+            "leggings": "Eastern Leggings"
+        }
+    },
+    {
+        "name": "Elite Knight Set",
+        "pieces": {
+            "helms": "Elite Knight Helm",
+            "chests": "Elite Knight Armor",
+            "gauntlets": "Elite Knight Gauntlets",
+            "leggings": "Elite Knight Leggings"
+        }
+    },
+    {
+        "name": "Evangelist Set",
+        "pieces": {
+            "helms": "Evangelist Hat",
+            "chests": "Evangelist Robe",
+            "gauntlets": "Evangelist Gloves",
+            "leggings": "Evangelist Trousers"
+        }
+    },
+    {
+        "name": "Executioner Set",
+        "pieces": {
+            "helms": "Executioner Helm",
+            "chests": "Executioner Armor",
+            "gauntlets": "Executioner Gauntlets",
+            "leggings": "Executioner Leggings"
+        }
+    },
+    {
+        "name": "Exile Set",
+        "pieces": {
+            "helms": "Exile Mask",
+            "chests": "Exile Armor",
+            "gauntlets": "Exile Gauntlets",
+            "leggings": "Exile Leggings"
+        }
+    },
+    {
+        "name": "Fallen Knight Set",
+        "pieces": {
+            "helms": "Fallen Knight Helm",
+            "chests": "Fallen Knight Armor",
+            "gauntlets": "Fallen Knight Gauntlets",
+            "leggings": "Fallen Knight Trousers"
+        }
+    },
+    {
+        "name": "Faraam Set",
+        "pieces": {
+            "helms": "Faraam Helm",
+            "chests": "Faraam Armor",
+            "gauntlets": "Faraam Gauntlets",
+            "leggings": "Faraam Boots"
+        }
+    },
+    {
+        "name": "Favor Set",
+        "pieces": {
+            "helms": "Helm of Favor",
+            "chests": "Embraced Armor of Favor",
+            "gauntlets": "Gauntlets of Favor"
+        }
+    },
+    {
+        "name": "Fire Keeper Set",
+        "pieces": {
+            "chests": "Fire Keeper Robe",
+            "gauntlets": "Fire Keeper Gloves",
+            "leggings": "Fire Keeper Skirt"
+        }
+    },
+    {
+        "name": "Fire Witch Set",
+        "pieces": {
+            "helms": "Fire Witch Helm",
+            "chests": "Fire Witch Armor",
+            "gauntlets": "Fire Witch Gauntlets"
+        }
+    },
+    {
+        "name": "Firelink Set",
+        "pieces": {
+            "helms": "Firelink Helm",
+            "chests": "Firelink Armor",
+            "gauntlets": "Firelink Gauntlets",
+            "leggings": "Firelink Leggings"
+        }
+    },
+    {
+        "name": "Golden Set",
+        "pieces": {
+            "helms": "Golden Crown",
+            "gauntlets": "Golden Bracelets"
+        }
+    },
+    {
+        "name": "Grave Warden Set",
+        "pieces": {
+            "helms": "Grave Warden Hood",
+            "chests": "Grave Warden Robe",
+            "leggings": "Grave Warden Skirt"
+        }
+    },
+    {
+        "name": "Gundyr's Set",
+        "pieces": {
+            "helms": "Gundyr's Helm",
+            "chests": "Gundyr's Armor",
+            "gauntlets": "Gundyr's Gauntlets",
+            "leggings": "Gundyr's Leggings"
+        }
+    },
+    {
+        "name": "Hard Leather Set",
+        "pieces": {
+            "chests": "Hard Leather Armor",
+            "gauntlets": "Hard Leather Gauntlets",
+            "leggings": "Hard Leather Boots"
+        }
+    },
+    {
+        "name": "Havel's Set",
+        "pieces": {
+            "helms": "Havel's Helm",
+            "chests": "Havel's Armor",
+            "gauntlets": "Havel's Gauntlets",
+            "leggings": "Havel's Leggings"
+        }
+    },
+    {
+        "name": "Herald Set",
+        "pieces": {
+            "helms": "Herald Helm",
+            "chests": "Herald Armor",
+            "gauntlets": "Herald Gloves",
+            "leggings": "Herald Trousers"
+        }
+    },
+    {
+        "name": "Iron Set",
+        "pieces": {
+            "helms": "Iron Helm",
+            "gauntlets": "Iron Bracelets",
+            "leggings": "Iron Leggings"
+        }
+    },
+    {
+        "name": "Jailer Set",
+        "pieces": {
+            "chests": "Jailer Robe",
+            "leggings": "Jailer Trousers"
+        }
+    },
+    {
+        "name": "Karla's Set",
+        "pieces": {
+            "helms": "Karla's Pointed Hat",
+            "chests": "Karla's Coat",
+            "gauntlets": "Karla's Gloves",
+            "leggings": "Karla's Trousers"
+        }
+    },
+    {
+        "name": "Knight Set",
+        "pieces": {
+            "helms": "Knight Helm",
+            "chests": "Knight Armor",
+            "gauntlets": "Knight Gauntlets",
+            "leggings": "Knight Leggings"
+        }
+    },
+    {
+        "name": "Leather Set",
+        "pieces": {
+            "chests": "Leather Armor",
+            "gauntlets": "Leather Gloves",
+            "leggings": "Leather Boots"
+        }
+    },
+    {
+        "name": "Leonhard's Set",
+        "pieces": {
+            "chests": "Leonhard's Garb",
+            "gauntlets": "Leonhard's Gauntlets",
+            "leggings": "Leonhard's Trousers"
+        }
+    },
+    {
+        "name": "Lorian's Set",
+        "pieces": {
+            "helms": "Lorian's Helm",
+            "chests": "Lorian's Armor",
+            "gauntlets": "Lorian's Gauntlets",
+            "leggings": "Lorian's Leggings"
+        }
+    },
+    {
+        "name": "Lothric Knight Set",
+        "pieces": {
+            "helms": "Lothric Knight Helm",
+            "chests": "Lothric Knight Armor",
+            "gauntlets": "Lothric Knight Gauntlets",
+            "leggings": "Lothric Knight Leggings"
+        }
+    },
+    {
+        "name": "Maiden Set",
+        "pieces": {
+            "helms": "Maiden Hood",
+            "chests": "Maiden Robe",
+            "gauntlets": "Maiden Gloves",
+            "leggings": "Maiden Skirt"
+        }
+    },
+    {
+        "name": "Master's Set",
+        "pieces": {
+            "chests": "Master's Attire",
+            "gauntlets": "Master's Gloves"
+        }
+    },
+    {
+        "name": "Mirrah Set",
+        "pieces": {
+            "chests": "Mirrah Vest",
+            "gauntlets": "Mirrah Gloves",
+            "leggings": "Mirrah Trousers"
+        }
+    },
+    {
+        "name": "Mirrah Chain Set",
+        "pieces": {
+            "chests": "Mirrah Chain Mail",
+            "gauntlets": "Mirrah Chain Gloves",
+            "leggings": "Mirrah Chain Leggings"
+        }
+    },
+    {
+        "name": "Morne's Set",
+        "pieces": {
+            "helms": "Morne's Helm",
+            "chests": "Morne's Armor",
+            "gauntlets": "Morne's Gauntlets",
+            "leggings": "Morne's Leggings"
+        }
+    },
+    {
+        "name": "Nameless Knight Set",
+        "pieces": {
+            "helms": "Nameless Knight Helm",
+            "chests": "Nameless Knight Armor",
+            "gauntlets": "Nameless Knight Gauntlets",
+            "leggings": "Nameless Knight Leggings"
+        }
+    },
+    {
+        "name": "Northern Set",
+        "pieces": {
+            "helms": "Northern Helm",
+            "chests": "Northern Armor",
+            "gauntlets": "Northern Gloves",
+            "leggings": "Northern Trousers"
+        }
+    },
+    {
+        "name": "Old Sorcerer Set",
+        "pieces": {
+            "helms": "Old Sorcerer Hat",
+            "chests": "Old Sorcerer Coat",
+            "gauntlets": "Old Sorcerer Gauntlets",
+            "leggings": "Old Sorcerer Boots"
+        }
+    },
+    {
+        "name": "Outrider Knight Set",
+        "pieces": {
+            "helms": "Outrider Knight Helm",
+            "chests": "Outrider Knight Armor",
+            "gauntlets": "Outrider Knight Gauntlets",
+            "leggings": "Outrider Knight Leggings"
+        }
+    },
+    {
+        "name": "Painting Guardian Set",
+        "pieces": {
+            "helms": "Painting Guardian Hood",
+            "chests": "Painting Guardian Gown",
+            "gauntlets": "Painting Guardian Gloves",
+            "leggings": "Painting Guardian Waistcloth"
+        }
+    },
+    {
+        "name": "Pale Shade Set",
+        "pieces": {
+            "chests": "Pale Shade Robe",
+            "gauntlets": "Pale Shade Gloves",
+            "leggings": "Pale Shade Trousers"
+        }
+    },
+    {
+        "name": "Pontiff Knight Set",
+        "pieces": {
+            "helms": "Pontiff Knight Crown",
+            "chests": "Pontiff Knight Armor",
+            "gauntlets": "Pontiff Knight Gauntlets",
+            "leggings": "Pontiff Knight Leggings"
+        }
+    },
+    {
+        "name": "Prayer Set",
+        "pieces": {
+            "helms": "Hood of Prayer",
+            "chests": "Robe of Prayer",
+            "leggings": "Skirt of Prayer"
+        }
+    },
+    {
+        "name": "Pyromancer Set",
+        "pieces": {
+            "helms": "Pyromancer Crown",
+            "chests": "Pyromancer Garb",
+            "gauntlets": "Pyromancer Wrap",
+            "leggings": "Pyromancer Trousers"
+        }
+    },
+    {
+        "name": "Sellsword Set",
+        "pieces": {
+            "helms": "Sellsword Helm",
+            "chests": "Sellsword Armor",
+            "gauntlets": "Sellsword Gauntlet"
+        }
+    },
+    {
+        "name": "Shadow Set",
+        "pieces": {
+            "helms": "Shadow Mask",
+            "chests": "Shadow Garb",
+            "gauntlets": "Shadow Gauntlets",
+            "leggings": "Shadow Leggings"
+        }
+    },
+    {
+        "name": "Silver Knight Set",
+        "pieces": {
+            "helms": "Silver Knight Helm",
+            "chests": "Silver Knight Armor",
+            "gauntlets": "Silver Knight Gauntlets",
+            "leggings": "Silver Knight Leggings"
+        }
+    },
+    {
+        "name": "Smough's Set",
+        "pieces": {
+            "helms": "Smough's Helm",
+            "chests": "Smough's Armor",
+            "gauntlets": "Smough's Gauntlets",
+            "leggings": "Smough's Leggings"
+        }
+    },
+    {
+        "name": "Sorcerer Set",
+        "pieces": {
+            "helms": "Sorcerer Hood",
+            "chests": "Sorcerer Robe",
+            "gauntlets": "Sorcerer Gloves",
+            "leggings": "Sorcerer Trousers"
+        }
+    },
+    {
+        "name": "Sunless Set",
+        "pieces": {
+            "helms": "Sunless Veil",
+            "chests": "Sunless Armor",
+            "gauntlets": "Sunless Gauntlets",
+            "leggings": "Sunless Leggings"
+        }
+    },
+    {
+        "name": "Sunset Set",
+        "pieces": {
+            "helms": "Sunset Helm",
+            "chests": "Sunset Armor",
+            "gauntlets": "Sunset Gauntlets",
+            "leggings": "Sunset Leggings"
+        }
+    },
+    {
+        "name": "Thorns Set",
+        "pieces": {
+            "helms": "Helm of Thorns",
+            "chests": "Armor of Thorns",
+            "gauntlets": "Gauntlets of Thorns",
+            "leggings": "Leggings of Thorns"
+        }
+    },
+    {
+        "name": "Undead Legion Set",
+        "pieces": {
+            "helms": "Undead Legion Helm",
+            "chests": "Undead Legion Armor",
+            "gauntlets": "Undead Legion Gauntlet",
+            "leggings": "Undead Legion Leggings"
+        }
+    },
+    {
+        "name": "Winged Knight Set",
+        "pieces": {
+            "helms": "Winged Knight Helm",
+            "chests": "Winged Knight Armor",
+            "gauntlets": "Winged Knight Gauntlets",
+            "leggings": "Winged Knight Leggings"
+        }
+    },
+    {
+        "name": "Wolf Knight Set",
+        "pieces": {
+            "helms": "Wolf Knight Helm",
+            "chests": "Wolf Knight Armor",
+            "gauntlets": "Wolf Knight Gauntlets",
+            "leggings": "Wolf Knight Leggings"
+        }
+    },
+    {
+        "name": "Worker Set",
+        "pieces": {
+            "helms": "Worker Hat",
+            "chests": "Worker Garb",
+            "gauntlets": "Worker Gloves",
+            "leggings": "Worker Trousers"
+        }
+    },
+    {
+        "name": "Xanthous Set",
+        "pieces": {
+            "helms": "Xanthous Crown",
+            "chests": "Xanthous Overcoat",
+            "gauntlets": "Xanthous Gloves",
+            "leggings": "Xanthous Trousers"
+        }
+    }
+]

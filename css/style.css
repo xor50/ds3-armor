@@ -79,6 +79,31 @@ table.armor-list td.downgrade
     display: none;
 }
 
+.sets-filter
+{
+    padding: 10px;
+}
+
+
+table.armor-list img.armor-set-icon
+{
+    margin-right: 4px;
+}
+
+
+table.armor-list .armor-set-gap
+{
+    display: inline-block;
+    width: 32px;
+    margin-right: 4px;
+}
+
+
+table.armor-list .armor-set-name
+{
+    margin-left: 10px;
+    margin-right: 6px;
+}
 
 /* ------------------------------------------------------------------ */
 /* Dark theme (toggled through <html data-theme="dark">)               */
