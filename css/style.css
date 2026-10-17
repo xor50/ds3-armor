@@ -223,3 +223,10 @@ html[data-theme="dark"] .btn-success
     text-shadow: none;
     box-shadow: none;
 }
+
+html[data-theme="dark"] .alert-warning
+{
+    background-color: #4a4222;
+    border-color: #7a6420;
+    color: #f3e6b8;
+}

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -30,8 +30,9 @@
         var ref_armors = null;
 
         var user_data = {
+            data_version: 2,
             max_equip_load: 50.0,
-            limit_equip_load: 69.9,
+            limit_equip_load: 70.0,
             weapons_load: 5.0,
             criterions: ['physicaldef', '-', '-'],
 
@@ -123,6 +124,10 @@
             if (stored.criterion !== undefined && stored.criterions === undefined)
                 stored.criterions = [stored.criterion];
             delete stored.criterion;
+
+            // Version 2: the default equip load limit changed from 69.9% to 70% (the roll threshold is inclusive)
+            if (!stored.data_version && stored.limit_equip_load === 69.9)
+                stored.limit_equip_load = 70.0;
 
             // Merge into the defaults, so that missing or malformed fields can't break the page
             var numeric = ['max_equip_load', 'limit_equip_load', 'weapons_load'];
@@ -319,7 +324,7 @@
         {
             function _createLabelColumn(tr, label, colspan)
             {
-                th = document.createElement('th');
+                var th = document.createElement('th');
                 th.colSpan = colspan;
                 th.textContent = label;
                 tr.appendChild(th);
@@ -327,10 +332,10 @@
 
             function _createStatColumn(tr, image, title)
             {
-                th = document.createElement('th');
+                var th = document.createElement('th');
                 tr.appendChild(th);
 
-                img = document.createElement('img');
+                var img = document.createElement('img');
                 img.src = image;
                 img.title = title;
                 th.appendChild(img);
@@ -380,107 +385,286 @@
         }
 
 
-        function optimize()
+        // Absorption stats are combined multiplicatively, all other stats are simply added up
+        var ABSORPTION_STATS = {
+            physicaldef: true,
+            strikedef: true,
+            slashdef: true,
+            thrustdef: true,
+            magicdef: true,
+            firedef: true,
+            lightningdef: true,
+            darkdef: true,
+        };
+
+        // Weights of the 1st, 2nd and 3rd criterion
+        var CRITERION_WEIGHTS = [1.0, 0.5, 0.25];
+
+        // Armor weights have one decimal: this absorbs floating point errors when comparing against the limit
+        var EPSILON = 1e-9;
+
+        var MAX_RESULTS = 10;
+
+
+        function computeStat(stat, helm, chest, gauntlets, legging)
         {
-            var max_equip_load = Number($('#max_equip_load')[0].value);
-            var limit_equip_load = Number($('#limit_equip_load')[0].value);
-            var weapons_load = Number($('#weapons_load')[0].value);
+            if (ABSORPTION_STATS[stat] === true)
+                return combineAbsorption(helm[stat], chest[stat], gauntlets[stat], legging[stat]);
 
-            var max_total_equip_load = limit_equip_load / 100.0 * max_equip_load - weapons_load;
+            return helm[stat] + chest[stat] + gauntlets[stat] + legging[stat];
+        }
 
-            var tbody = $('#results tbody')[0];
-            while (tbody.firstChild)
-                tbody.removeChild(tbody.firstChild);
 
-            var results = [];
+        function getOwnedIndices(kind)
+        {
+            var indices = [];
 
-            for (var helm = 0; helm < ref_armors.helms.length; ++helm)
+            for (var i = 0; i < ref_armors[kind].length; ++i)
             {
-                if (user_data.available_armors.helms.indexOf(ref_armors.helms[helm].name) < 0)
-                    continue;
+                if (user_data.available_armors[kind].indexOf(ref_armors[kind][i].name) >= 0)
+                    indices.push(i);
+            }
 
-                for (var chest = 0; chest < ref_armors.chests.length; ++chest)
+            return indices;
+        }
+
+
+        // Removes the owned items that don't exist (anymore) in the armors data
+        function pruneUnknownArmors()
+        {
+            var kinds = ['helms', 'chests', 'gauntlets', 'leggings'];
+            var changed = false;
+
+            for (var k = 0; k < kinds.length; ++k)
+            {
+                var known = {};
+                for (var i = 0; i < ref_armors[kinds[k]].length; ++i)
+                    known[ref_armors[kinds[k]][i].name] = true;
+
+                var owned = user_data.available_armors[kinds[k]];
+                var filtered = owned.filter(function(name) { return known[name] === true; });
+
+                if (filtered.length !== owned.length)
                 {
-                    if (user_data.available_armors.chests.indexOf(ref_armors.chests[chest].name) < 0)
+                    user_data.available_armors[kinds[k]] = filtered;
+                    changed = true;
+                }
+            }
+
+            if (changed)
+                saveUserData();
+        }
+
+
+        // Turns the selected criteria (in priority order, '-' = unused) into [{ name, weight }]
+        function buildCriteria(names)
+        {
+            var criteria = [];
+
+            for (var i = 0; i < names.length; ++i)
+            {
+                if (names[i] && names[i] !== '-')
+                    criteria.push({ name: names[i], weight: CRITERION_WEIGHTS[criteria.length] });
+            }
+
+            return criteria;
+        }
+
+
+        // Finds the best armor sets under the given weight, ranked by the weighted criteria.
+        //
+        // Each criterion is first normalized to [0, 1] over all the sets that fit under the weight limit
+        // (0 = the worst such set, 1 = the best one), so that stats with very different scales
+        // (e.g. absorption ~30 vs. resistances ~150) can be compared. The score of a set is then the
+        // weighted sum of its normalized criteria.
+        //
+        // Nothing is stored per set: they are enumerated twice (pass 1 finds the ranges, pass 2 scores them
+        // and keeps the best ones). The stats are accumulated along the nested loops (products of
+        // (1 - absorption) for the absorption stats, sums for the others) so that each set costs only a
+        // handful of operations, even when hundreds of thousands of sets are examined.
+        function findBestSets(criteria, max_total_weight)
+        {
+            var kinds = ['helms', 'chests', 'gauntlets', 'leggings'];
+            var K = criteria.length;
+            var limit = max_total_weight + EPSILON;
+            var k;
+
+            var is_absorption = [];
+            for (k = 0; k < K; ++k)
+                is_absorption.push(ABSORPTION_STATS[criteria[k].name] === true);
+
+            // Per slot: the owned items, their weights, and their terms for each criterion
+            var slots = [];
+            for (var s = 0; s < kinds.length; ++s)
+            {
+                var indices = getOwnedIndices(kinds[s]);
+                if (indices.length === 0)
+                    return [];
+
+                var weights = new Float64Array(indices.length);
+                var terms = new Float64Array(indices.length * K);
+
+                for (var i = 0; i < indices.length; ++i)
+                {
+                    var item = ref_armors[kinds[s]][indices[i]];
+                    weights[i] = item.weight;
+
+                    for (k = 0; k < K; ++k)
+                    {
+                        var stat = item[criteria[k].name];
+                        terms[i * K + k] = is_absorption[k] ? 1.0 - stat / 100.0 : stat;
+                    }
+                }
+
+                slots.push({ indices: indices, weights: weights, terms: terms });
+            }
+
+            var H = slots[0], C = slots[1], G = slots[2], L = slots[3];
+
+            var mins = new Float64Array(K).fill(Infinity);
+            var maxs = new Float64Array(K).fill(-Infinity);
+            var scale = new Float64Array(K);
+            var best = [];
+
+            function scan(pass)
+            {
+                var acc1 = new Float64Array(K);
+                var acc2 = new Float64Array(K);
+                var acc3 = new Float64Array(K);
+
+                for (var hi = 0; hi < H.indices.length; ++hi)
+                {
+                    var w1 = H.weights[hi];
+                    if (w1 > limit)
                         continue;
 
-                    for (var gauntlets = 0; gauntlets < ref_armors.gauntlets.length; ++gauntlets)
+                    for (var k = 0; k < K; ++k)
+                        acc1[k] = H.terms[hi * K + k];
+
+                    for (var ci = 0; ci < C.indices.length; ++ci)
                     {
-                        if (user_data.available_armors.gauntlets.indexOf(ref_armors.gauntlets[gauntlets].name) < 0)
+                        var w2 = w1 + C.weights[ci];
+                        if (w2 > limit)
                             continue;
 
-                        for (var legging = 0; legging < ref_armors.leggings.length; ++legging)
+                        for (var k = 0; k < K; ++k)
+                            acc2[k] = is_absorption[k] ? acc1[k] * C.terms[ci * K + k] : acc1[k] + C.terms[ci * K + k];
+
+                        for (var gi = 0; gi < G.indices.length; ++gi)
                         {
-                            if (user_data.available_armors.leggings.indexOf(ref_armors.leggings[legging].name) < 0)
+                            var w3 = w2 + G.weights[gi];
+                            if (w3 > limit)
                                 continue;
 
-                            var armor_set = createArmorSet(helm, chest, gauntlets, legging);
-                            if (armor_set.weight > max_total_equip_load)
-                                continue;
+                            for (var k = 0; k < K; ++k)
+                                acc3[k] = is_absorption[k] ? acc2[k] * G.terms[gi * K + k] : acc2[k] + G.terms[gi * K + k];
 
-                            results.push(armor_set);
+                            for (var li = 0; li < L.indices.length; ++li)
+                            {
+                                if (w3 + L.weights[li] > limit)
+                                    continue;
+
+                                var score = 0.0;
+
+                                for (var k = 0; k < K; ++k)
+                                {
+                                    var value = is_absorption[k] ?
+                                                100.0 * (1.0 - acc3[k] * L.terms[li * K + k]) :
+                                                acc3[k] + L.terms[li * K + k];
+
+                                    if (pass === 1)
+                                    {
+                                        if (value < mins[k]) mins[k] = value;
+                                        if (value > maxs[k]) maxs[k] = value;
+                                    }
+                                    else
+                                    {
+                                        score += scale[k] * (value - mins[k]);
+                                    }
+                                }
+
+                                if (pass === 1)
+                                    continue;
+
+                                if (best.length === MAX_RESULTS && score <= best[best.length - 1].score)
+                                    continue;
+
+                                // Insert after the entries with an equal or higher score (the first one found wins ties)
+                                var pos = best.length;
+                                while (pos > 0 && best[pos - 1].score < score)
+                                    --pos;
+
+                                best.splice(pos, 0, {
+                                    score: score,
+                                    indices: [H.indices[hi], C.indices[ci], G.indices[gi], L.indices[li]],
+                                });
+
+                                if (best.length > MAX_RESULTS)
+                                    best.pop();
+                            }
                         }
                     }
                 }
             }
 
-            var criterion1 = $("#criterion1")[0].value;
-            var criterion2 = $("#criterion2")[0].value;
-            var criterion3 = $("#criterion3")[0].value;
+            // Pass 1: ranges
+            scan(1);
 
-            var total_weight = 1.0;
+            if (maxs[0] === -Infinity)
+                return [];   // no set fits under the weight limit
 
-            var criterions = [
-                {
-                    name: criterion1,
-                    weight: total_weight,
-                }
-            ];
-
-            if (criterion2 === "-")
+            for (k = 0; k < K; ++k)
             {
-                criterion2 = criterion3;
-                criterion3 = "-";
+                var range = maxs[k] - mins[k];
+                scale[k] = range > 0 ? criteria[k].weight / range : 0.0;
             }
 
-            if (criterion2 !== "-")
-            {
-                criterions.push({
-                    name: criterion2,
-                    weight: 0.5,
-                });
+            // Pass 2: scores
+            scan(2);
 
-                total_weight += 0.5;
-            }
-
-            if (criterion3 !== "-")
-            {
-                criterions.push({
-                    name: criterion3,
-                    weight: 0.25,
-                });
-
-                total_weight += 0.25;
-            }
-
-            results.sort(function(a, b) {
-                var score_a = a[criterions[0].name] * criterions[0].weight;
-                var score_b = b[criterions[0].name] * criterions[0].weight;
-
-                for (var i = 1; i < criterions.length; ++i)
-                {
-                    score_a += a[criterions[i].name] * criterions[i].weight;
-                    score_b += b[criterions[i].name] * criterions[i].weight;
-                }
-
-                if (score_a < score_b)
-                    return 1;
-                if (score_a > score_b)
-                    return -1;
-                return 0;
+            return best.map(function(entry) {
+                var armor_set = createArmorSet(entry.indices[0], entry.indices[1], entry.indices[2], entry.indices[3]);
+                armor_set.score = entry.score;
+                return armor_set;
             });
+        }
 
-            results = results.slice(0, 10);
+
+        function optimize()
+        {
+            var max_equip_load = Number($('#max_equip_load').val());
+            var limit_equip_load = Number($('#limit_equip_load').val());
+            var weapons_load = Number($('#weapons_load').val());
+
+            var tbody = $('#results tbody')[0];
+            while (tbody.firstChild)
+                tbody.removeChild(tbody.firstChild);
+
+            var message = $('#results_message');
+            message.hide();
+
+            if (!(max_equip_load > 0) || !isFinite(limit_equip_load) || !isFinite(weapons_load))
+            {
+                message.text('Please enter valid numbers for the max equip load, the limit and the weapons load.').show();
+                return;
+            }
+
+            var max_total_equip_load = limit_equip_load / 100.0 * max_equip_load - weapons_load;
+
+            var criteria = buildCriteria([
+                $('#criterion1').val(),
+                $('#criterion2').val(),
+                $('#criterion3').val(),
+            ]);
+
+            var results = findBestSets(criteria, max_total_equip_load);
+
+            if (results.length === 0)
+            {
+                message.text('No armor set found. Mark at least one item of each kind as owned, ' +
+                             'or raise the equip load limit.').show();
+                return;
+            }
 
             var equipped_set = getEquippedArmorSet();
 
@@ -514,6 +698,7 @@
 
         function addArmorSetToTable(tbody, armor_set, with_button, comparison_set)
         {
+            var td;
             var max_equip_load = Number($('#max_equip_load')[0].value);
             var weapons_load = Number($('#weapons_load')[0].value);
 
@@ -658,57 +843,50 @@
             return 100.0 * (1.0 - (1.0 - a / 100.0) * (1.0 - b / 100.0) * (1.0 - c / 100.0) * (1.0 - d / 100.0));
         }
 
-        function createArmorSet(helm, chest, gauntlets, legging)
+        function createArmorSet(helm_index, chest_index, gauntlets_index, legging_index)
         {
-            helm = ref_armors.helms[helm];
-            chest = ref_armors.chests[chest];
-            gauntlets = ref_armors.gauntlets[gauntlets];
-            legging = ref_armors.leggings[legging];
+            var helm = ref_armors.helms[helm_index];
+            var chest = ref_armors.chests[chest_index];
+            var gauntlets = ref_armors.gauntlets[gauntlets_index];
+            var legging = ref_armors.leggings[legging_index];
 
-            return {
-                helm_name:     helm.name,
-                helm_image:    helm.image,
-                chest_name:    chest.name,
-                chest_image:   chest.image,
-                gauntlets_name:   gauntlets.name,
-                gauntlets_image:  gauntlets.image,
-                legging_name:  legging.name,
+            var armor_set = {
+                helm_name: helm.name,
+                helm_image: helm.image,
+                chest_name: chest.name,
+                chest_image: chest.image,
+                gauntlets_name: gauntlets.name,
+                gauntlets_image: gauntlets.image,
+                legging_name: legging.name,
                 legging_image: legging.image,
-
-                physicaldef:   combineAbsorption(helm.physicaldef, chest.physicaldef, gauntlets.physicaldef, legging.physicaldef),
-                strikedef:     combineAbsorption(helm.strikedef, chest.strikedef, gauntlets.strikedef, legging.strikedef),
-                slashdef:      combineAbsorption(helm.slashdef, chest.slashdef, gauntlets.slashdef, legging.slashdef),
-                thrustdef:     combineAbsorption(helm.thrustdef, chest.thrustdef, gauntlets.thrustdef, legging.thrustdef),
-
-                magicdef:      combineAbsorption(helm.magicdef, chest.magicdef, gauntlets.magicdef, legging.magicdef),
-                firedef:       combineAbsorption(helm.firedef, chest.firedef, gauntlets.firedef, legging.firedef),
-                lightningdef:  combineAbsorption(helm.lightningdef, chest.lightningdef, gauntlets.lightningdef, legging.lightningdef),
-                darkdef:       combineAbsorption(helm.darkdef, chest.darkdef, gauntlets.darkdef, legging.darkdef),
-
-                bleedres:      helm.bleedres + chest.bleedres + gauntlets.bleedres + legging.bleedres,
-                poisonres:     helm.poisonres + chest.poisonres + gauntlets.poisonres + legging.poisonres,
-                curseres:      helm.curseres + chest.curseres + gauntlets.curseres + legging.curseres,
-                frostres:      helm.frostres + chest.frostres + gauntlets.frostres + legging.frostres,
-
-                poise:         helm.poise + chest.poise + gauntlets.poise + legging.poise,
-                weight:        helm.weight + chest.weight + gauntlets.weight + legging.weight,
             };
+
+            for (var i = 0; i < all_columns.length; ++i)
+                armor_set[all_columns[i]] = computeStat(all_columns[i], helm, chest, gauntlets, legging);
+
+            return armor_set;
         }
 
 
         function getEquippedArmorSet()
         {
-            if (user_data.equipped_armor.helm !== null)
-            {
-                return createArmorSet(
-                    getArmorIndex('helms', user_data.equipped_armor.helm),
-                    getArmorIndex('chests', user_data.equipped_armor.chest),
-                    getArmorIndex('gauntlets', user_data.equipped_armor.gauntlets),
-                    getArmorIndex('leggings', user_data.equipped_armor.leggings)
-                );
-            }
+            var equipped = user_data.equipped_armor;
 
-            return null;
+            if (equipped.helm === null)
+                return null;
+
+            var indices = [
+                getArmorIndex('helms', equipped.helm),
+                getArmorIndex('chests', equipped.chest),
+                getArmorIndex('gauntlets', equipped.gauntlets),
+                getArmorIndex('leggings', equipped.leggings),
+            ];
+
+            // An item that doesn't exist anymore in the data: ignore the stored set
+            if (indices.indexOf(null) >= 0)
+                return null;
+
+            return createArmorSet(indices[0], indices[1], indices[2], indices[3]);
         }
 
 
@@ -750,7 +928,7 @@
                     </div>
                     <div class="input-group">
                         <div class="input-group-addon"><strong>Limit Equip Load</strong></div>
-                        <input type="text" class="form-control small" id="limit_equip_load" value="69.9" />
+                        <input type="text" class="form-control small" id="limit_equip_load" value="70" />
                         <div class="input-group-addon">%</div>
                     </div>
                     <div class="input-group">
@@ -854,6 +1032,8 @@
                 <h3 class="panel-title">Results</h3>
             </div>
             <div class="panel-body">
+                <div id="results_message" class="alert alert-warning" style="display:none;"></div>
+
                 <table id="results" class="table table-hover table-bordered armor-list tablesorter">
                     <thead>
                         <tr>
@@ -908,9 +1088,7 @@
                 <div id="available_helms" class="panel-collapse collapse">
                 </div>
             </div>
-        </div>
 
-        <div class="panel-group" id="accordion">
             <div class="panel panel-info">
                 <div class="panel-heading">
                     <h3 class="panel-title">
@@ -926,9 +1104,7 @@
                 <div id="available_chests" class="panel-collapse collapse">
                 </div>
             </div>
-        </div>
 
-        <div class="panel-group" id="accordion">
             <div class="panel panel-info">
                 <div class="panel-heading">
                     <h3 class="panel-title">
@@ -944,9 +1120,7 @@
                 <div id="available_gauntlets" class="panel-collapse collapse">
                 </div>
             </div>
-        </div>
 
-        <div class="panel-group" id="accordion">
             <div class="panel panel-info">
                 <div class="panel-heading">
                     <h3 class="panel-title">
@@ -985,6 +1159,15 @@
             $('#max_equip_load, #limit_equip_load, #weapons_load').on('input change', saveParameters);
             $('#criterion1, #criterion2, #criterion3').on('change', saveParameters);
 
+            // Enter in a parameter field starts the search
+            $('#max_equip_load, #limit_equip_load, #weapons_load').on('keydown', function(e) {
+                if (e.which === 13)
+                {
+                    e.preventDefault();
+                    $('#btn_search').click();
+                }
+            });
+
             // Theme toggle
             applyTheme(document.documentElement.getAttribute('data-theme') || 'light');
             $('#theme_toggle').click(function() {
@@ -996,6 +1179,7 @@
             // Load the list of armor items
             $.getJSON('data/armors.json', function(resp) {
                 ref_armors = resp;
+                pruneUnknownArmors();
 
                 setupArmorTable($('#available_helms')[0], 'helms', resp);
                 setupArmorTable($('#available_chests')[0], 'chests', resp);
