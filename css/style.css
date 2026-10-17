@@ -78,3 +78,148 @@ table.armor-list td.downgrade
 {
     display: none;
 }
+
+
+/* ------------------------------------------------------------------ */
+/* Dark theme (toggled through <html data-theme="dark">)               */
+/* ------------------------------------------------------------------ */
+
+html[data-theme="dark"]
+{
+    color-scheme: dark;   /* native controls: select, checkbox, scrollbars */
+}
+
+html[data-theme="dark"] body
+{
+    background-color: #1a1d20;
+    color: #d6d9dc;
+}
+
+html[data-theme="dark"] a
+{
+    color: #7db7ff;
+}
+
+/* The logo is black on white: invert it and let the black blend away */
+html[data-theme="dark"] .title-panel img
+{
+    filter: invert(1);
+    mix-blend-mode: screen;
+}
+
+/* Panels */
+html[data-theme="dark"] .panel
+{
+    background-color: #23272b;
+    border-color: #3a3f44;
+    box-shadow: none;
+}
+
+html[data-theme="dark"] .panel>.panel-heading
+{
+    background-image: none;
+    text-shadow: none;
+}
+
+html[data-theme="dark"] .panel-primary { border-color: #2f5f8a; }
+html[data-theme="dark"] .panel-primary>.panel-heading { background-color: #2a5580; border-color: #2f5f8a; color: #fff; }
+
+html[data-theme="dark"] .panel-success { border-color: #2e6a3e; }
+html[data-theme="dark"] .panel-success>.panel-heading { background-color: #285a36; border-color: #2e6a3e; color: #e6f4ea; }
+
+html[data-theme="dark"] .panel-info { border-color: #2c6577; }
+html[data-theme="dark"] .panel-info>.panel-heading { background-color: #25596a; border-color: #2c6577; color: #e3f3f8; }
+
+html[data-theme="dark"] .panel-warning { border-color: #7a6420; }
+html[data-theme="dark"] .panel-warning>.panel-heading { background-color: #67541a; border-color: #7a6420; color: #fbf1cf; }
+
+html[data-theme="dark"] .panel-title a,
+html[data-theme="dark"] .panel-title a:hover,
+html[data-theme="dark"] .panel-title a:focus
+{
+    color: inherit;
+}
+
+/* Tables */
+html[data-theme="dark"] .table>thead>tr>th,
+html[data-theme="dark"] .table>tbody>tr>th,
+html[data-theme="dark"] .table>tbody>tr>td,
+html[data-theme="dark"] .table-bordered,
+html[data-theme="dark"] .table-bordered>thead>tr>th,
+html[data-theme="dark"] .table-bordered>tbody>tr>td
+{
+    border-color: #3a3f44;
+}
+
+html[data-theme="dark"] .table-hover>tbody>tr:hover
+{
+    background-color: #2d3338;
+}
+
+html[data-theme="dark"] .bg-warning,
+html[data-theme="dark"] .table-hover>tbody>tr.bg-warning:hover
+{
+    background-color: #4a4222;
+}
+
+html[data-theme="dark"] table.tablesorter thead tr .headerSortDown,
+html[data-theme="dark"] table.tablesorter thead tr .headerSortUp
+{
+    background-color: #2c4a5c;
+}
+
+html[data-theme="dark"] table.armor-list td.upgrade
+{
+    color: #6cb2ff;
+}
+
+html[data-theme="dark"] table.armor-list td.downgrade
+{
+    color: #ff7b7b;
+}
+
+/* Forms and buttons */
+html[data-theme="dark"] .form-control
+{
+    background-color: #1a1d20;
+    border-color: #4a5056;
+    color: #e4e6e8;
+    box-shadow: none;
+}
+
+html[data-theme="dark"] .form-control:focus
+{
+    border-color: #66afe9;
+}
+
+html[data-theme="dark"] .input-group-addon
+{
+    background-color: #2d3338;
+    border-color: #4a5056;
+    color: #d6d9dc;
+}
+
+html[data-theme="dark"] .btn-default
+{
+    background-color: #2d3338;
+    background-image: none;
+    border-color: #4a5056;
+    color: #d6d9dc;
+    text-shadow: none;
+    box-shadow: none;
+}
+
+html[data-theme="dark"] .btn-default:hover,
+html[data-theme="dark"] .btn-default:focus
+{
+    background-color: #3a4147;
+    border-color: #5a6168;
+    color: #fff;
+}
+
+html[data-theme="dark"] .btn-success
+{
+    background-image: none;
+    text-shadow: none;
+    box-shadow: none;
+}

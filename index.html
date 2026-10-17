@@ -5,6 +5,16 @@
 
     <title>Dark Souls III - Armor optimizer</title>
 
+    <script>
+        // Apply the saved (or system) theme before anything is painted, to avoid a light flash
+        (function() {
+            var theme = null;
+            try { theme = localStorage.getItem('ds3_armor_theme'); } catch (e) {}
+            if (theme !== 'light' && theme !== 'dark')
+                theme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
     <link rel="stylesheet" href="css/bootstrap.min.css">
     <link rel="stylesheet" href="css/bootstrap-theme.min.css">
     <link rel="stylesheet" href="css/tablesorter/style.css">
@@ -23,7 +33,7 @@
             max_equip_load: 50.0,
             limit_equip_load: 69.9,
             weapons_load: 5.0,
-            criterions: ['physicaldef'],
+            criterions: ['physicaldef', '-', '-'],
 
             equipped_armor: {
                 helm: null,
@@ -58,9 +68,114 @@
         ];
 
 
+        var STORAGE_KEY = 'ds3_armor_user_data';
+        var THEME_KEY = 'ds3_armor_theme';
+
         function saveUserData()
         {
-            Cookies.set('user_data', user_data, { expires: 365 });
+            try
+            {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(user_data));
+            }
+            catch (e)
+            {
+                // Storage unavailable (private mode, quota, ...): the tool still works, just without persistence
+            }
+        }
+
+        function loadUserData()
+        {
+            var stored = null;
+
+            try
+            {
+                var raw = localStorage.getItem(STORAGE_KEY);
+                if (raw !== null)
+                    stored = JSON.parse(raw);
+            }
+            catch (e)
+            {
+                stored = null;
+            }
+
+            // One-time migration from the old cookie storage
+            if (stored === null)
+            {
+                try
+                {
+                    var cookie_data = Cookies.getJSON('user_data');
+                    if (cookie_data !== undefined)
+                    {
+                        stored = cookie_data;
+                        Cookies.remove('user_data');
+                    }
+                }
+                catch (e)
+                {
+                    stored = null;
+                }
+            }
+
+            if (stored === null || typeof stored !== 'object')
+                return false;
+
+            // Format upgrade
+            if (stored.criterion !== undefined && stored.criterions === undefined)
+                stored.criterions = [stored.criterion];
+            delete stored.criterion;
+
+            // Merge into the defaults, so that missing or malformed fields can't break the page
+            var numeric = ['max_equip_load', 'limit_equip_load', 'weapons_load'];
+            for (var i = 0; i < numeric.length; ++i)
+            {
+                if (typeof stored[numeric[i]] === 'number' && isFinite(stored[numeric[i]]))
+                    user_data[numeric[i]] = stored[numeric[i]];
+            }
+
+            if (Array.isArray(stored.criterions) && stored.criterions.length > 0)
+                user_data.criterions = stored.criterions.slice(0, 3);
+
+            var kinds = ['helms', 'chests', 'gauntlets', 'leggings'];
+            var equip_keys = ['helm', 'chest', 'gauntlets', 'leggings'];
+            for (var k = 0; k < kinds.length; ++k)
+            {
+                if (stored.available_armors && Array.isArray(stored.available_armors[kinds[k]]))
+                    user_data.available_armors[kinds[k]] = stored.available_armors[kinds[k]];
+
+                if (stored.equipped_armor && typeof stored.equipped_armor[equip_keys[k]] === 'string')
+                    user_data.equipped_armor[equip_keys[k]] = stored.equipped_armor[equip_keys[k]];
+            }
+
+            return true;
+        }
+
+        // Reads the parameter fields into user_data and saves them, so that they survive a page reload
+        function saveParameters()
+        {
+            function _readNumber(id, current)
+            {
+                var text = $('#' + id).val().trim();
+                var value = Number(text);
+                // Ignore empty / half-typed values instead of overwriting the stored value with 0
+                return (text !== '' && isFinite(value)) ? value : current;
+            }
+
+            user_data.max_equip_load = _readNumber('max_equip_load', user_data.max_equip_load);
+            user_data.limit_equip_load = _readNumber('limit_equip_load', user_data.limit_equip_load);
+            user_data.weapons_load = _readNumber('weapons_load', user_data.weapons_load);
+            user_data.criterions = [
+                $('#criterion1').val(),
+                $('#criterion2').val(),
+                $('#criterion3').val(),
+            ];
+
+            saveUserData();
+        }
+
+        function applyTheme(theme)
+        {
+            document.documentElement.setAttribute('data-theme', theme);
+            $('#theme_toggle_label').text(theme === 'dark' ? 'Light mode' : 'Dark mode');
         }
 
         function addArmor(kind, name)
@@ -160,7 +275,6 @@
                     'curseres',
                     'poise',
                     'weight',
-                    'durability',
                 ];
 
                 for (var j = 0; j < columns.length; ++j)
@@ -241,7 +355,7 @@
             _createLabelColumn(tr, 'Physical defenses', 4);
             _createLabelColumn(tr, 'Elemental defenses', 4);
             _createLabelColumn(tr, 'Resistances', 4);
-            _createLabelColumn(tr, '', 3);
+            _createLabelColumn(tr, '', 2);
 
             tr = document.createElement('tr');
             thead.appendChild(tr);
@@ -263,7 +377,6 @@
             _createStatColumn(tr, 'images/icon-curseres.png', 'Curse resistance');
             _createStatColumn(tr, 'images/icon-poise.png', 'Poise');
             _createStatColumn(tr, 'images/icon-weight.png', 'Weight');
-            _createStatColumn(tr, 'images/icon-durability.png', 'Durability');
         }
 
 
@@ -615,6 +728,11 @@
 </head>
 <body>
     <div class="container-fluid">
+        <button type="button" class="btn btn-default btn-sm" id="theme_toggle" style="float: right; margin-top: 10px;">
+            <span class="glyphicon glyphicon-adjust" aria-hidden="true"></span>
+            <span id="theme_toggle_label">Dark mode</span>
+        </button>
+
         <div class="title-panel">
             <img src="images/logo.jpg" width="720" />
             <h1>Armor optimizer</h1>
@@ -702,7 +820,7 @@
                             <th colspan="4">Physical defenses</th>
                             <th colspan="4">Elemental defenses</th>
                             <th colspan="4">Resistances</th>
-                            <th colspan="3"></th>
+                            <th colspan="2"></th>
                         </tr>
                         <tr>
                             <th>Helm</th>
@@ -722,7 +840,6 @@
                             <th><img src="images/icon-frostres.png" title="Frost resistance" /></th>
                             <th><img src="images/icon-curseres.png" title="Curse resistance" /></th>
                             <th><img src="images/icon-poise.png" title="Poise" /></th>
-                            <th><img src="images/icon-durability.png" title="Durability" /></th>
                             <th><img src="images/icon-weight.png" title="Equip load" /></th>
                         </tr>
                     </thead>
@@ -745,7 +862,7 @@
                             <th colspan="4">Physical defenses</th>
                             <th colspan="4">Elemental defenses</th>
                             <th colspan="4">Resistances</th>
-                            <th colspan="3"></th>
+                            <th colspan="2"></th>
                         </tr>
                         <tr>
                             <th></th>
@@ -766,7 +883,6 @@
                             <th><img src="images/icon-frostres.png" title="Frost resistance" /></th>
                             <th><img src="images/icon-curseres.png" title="Curse resistance" /></th>
                             <th><img src="images/icon-poise.png" title="Poise" /></th>
-                            <th><img src="images/icon-durability.png" title="Durability" /></th>
                             <th><img src="images/icon-weight.png" title="Equip load" /></th>
                         </tr>
                     </thead>
@@ -854,44 +970,28 @@
     <script>
         $(document).ready(function() {
 
-            // Load user data from the cookie
-            var data = Cookies.getJSON('user_data');
-            if (data === undefined)
-            {
+            // Load user data (localStorage, with a one-time migration of the old cookie)
+            if (!loadUserData())
                 saveUserData();
-            }
-            else
-            {
-                user_data = data;
 
-                // Format upgrade
-                if (user_data.criterion !== undefined)
-                {
-                    user_data.criterions = [user_data.criterion];
-                    user_data.criterion = undefined;
-                }
+            $('#max_equip_load').val(user_data.max_equip_load);
+            $('#limit_equip_load').val(user_data.limit_equip_load);
+            $('#weapons_load').val(user_data.weapons_load);
 
-                if (user_data.equipped_armor === undefined)
-                {
-                    user_data.equipped_armor = {
-                        helm: null,
-                        chest: null,
-                        gauntlets: null,
-                        leggings: null,
-                    };
-                }
-            }
+            for (var c = 0; c < 3; ++c)
+                $('#criterion' + (c + 1)).val(user_data.criterions[c] || '-');
 
-            $('#max_equip_load')[0].value = user_data.max_equip_load;
-            $('#limit_equip_load')[0].value = user_data.limit_equip_load;
-            $('#weapons_load')[0].value = user_data.weapons_load;
-            $('#criterion1').val(user_data.criterions[0]);
+            // Keep the parameters persistent as soon as they are edited
+            $('#max_equip_load, #limit_equip_load, #weapons_load').on('input change', saveParameters);
+            $('#criterion1, #criterion2, #criterion3').on('change', saveParameters);
 
-            if (user_data.criterions.length > 1)
-                $('#criterion2').val(user_data.criterions[1]);
-
-            if (user_data.criterions.length > 2)
-                $('#criterion3').val(user_data.criterions[2]);
+            // Theme toggle
+            applyTheme(document.documentElement.getAttribute('data-theme') || 'light');
+            $('#theme_toggle').click(function() {
+                var theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                applyTheme(theme);
+                try { localStorage.setItem(THEME_KEY, theme); } catch (e) {}
+            });
 
             // Load the list of armor items
             $.getJSON('data/armors.json', function(resp) {
@@ -905,18 +1005,7 @@
                 $('#btn_search').click(function() {
                     $('#results_panel').show();
 
-                    user_data.max_equip_load = Number($('#max_equip_load')[0].value);
-                    user_data.limit_equip_load = Number($('#limit_equip_load')[0].value);
-                    user_data.weapons_load = Number($('#weapons_load')[0].value);
-                    user_data.criterions = [$('#criterion1')[0].value];
-
-                    if ($('#criterion2')[0].value != '-')
-                        user_data.criterions.push($('#criterion2')[0].value);
-
-                    if ($('#criterion3')[0].value != '-')
-                        user_data.criterions.push($('#criterion3')[0].value);
-
-                    saveUserData();
+                    saveParameters();
                     optimize();
                 });
 

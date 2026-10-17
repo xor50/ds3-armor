@@ -65,7 +65,6 @@ def process_file(filename):
 		entry['curseres'] = extract_number(lines[current + 13])
 		entry['poise'] = extract_number(lines[current + 14])
 		entry['weight'] = extract_number(lines[current + 15])
-		entry['durability'] = extract_number(lines[current + 16])
 
 
 		entries.append(entry)
