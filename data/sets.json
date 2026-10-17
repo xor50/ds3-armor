@@ -24,20 +24,29 @@
         }
     },
     {
+        "name": "Armor of Favor Set",
+        "pieces": {
+            "helms": "Helm of Favor",
+            "chests": "Embraced Armor of Favor",
+            "gauntlets": "Gauntlets of Favor"
+        }
+    },
+    {
+        "name": "Armor of the Sun Set",
+        "pieces": {
+            "helms": "Iron Helm",
+            "chests": "Armor of the Sun",
+            "gauntlets": "Iron Bracelets",
+            "leggings": "Iron Leggings"
+        }
+    },
+    {
         "name": "Assassin Set",
         "pieces": {
             "helms": "Assassin Hood",
             "chests": "Assassin Armor",
             "gauntlets": "Assassin Gloves",
             "leggings": "Assassin Trousers"
-        }
-    },
-    {
-        "name": "Black Set",
-        "pieces": {
-            "chests": "Black Dress",
-            "gauntlets": "Black Gauntlets",
-            "leggings": "Black Leggings"
         }
     },
     {
@@ -71,6 +80,15 @@
             "chests": "Black Leather Armor",
             "gauntlets": "Black Leather Gloves",
             "leggings": "Black Leather Boots"
+        }
+    },
+    {
+        "name": "Black Set",
+        "pieces": {
+            "helms": "Billed Mask",
+            "chests": "Black Dress",
+            "gauntlets": "Black Gauntlets",
+            "leggings": "Black Leggings"
         }
     },
     {
@@ -110,10 +128,11 @@
         }
     },
     {
-        "name": "Chain Set",
+        "name": "Chain Armor Set",
         "pieces": {
             "helms": "Chain Helm",
             "chests": "Chain Armor",
+            "gauntlets": "Leather Gauntlets",
             "leggings": "Chain Leggings"
         }
     },
@@ -187,7 +206,9 @@
     {
         "name": "Dragonscale Set",
         "pieces": {
+            "helms": "Golden Crown",
             "chests": "Dragonscale Armor",
+            "gauntlets": "Golden Bracelets",
             "leggings": "Dragonscale Waistcloth"
         }
     },
@@ -281,14 +302,6 @@
         }
     },
     {
-        "name": "Favor Set",
-        "pieces": {
-            "helms": "Helm of Favor",
-            "chests": "Embraced Armor of Favor",
-            "gauntlets": "Gauntlets of Favor"
-        }
-    },
-    {
         "name": "Fire Keeper Set",
         "pieces": {
             "chests": "Fire Keeper Robe",
@@ -311,13 +324,6 @@
             "chests": "Firelink Armor",
             "gauntlets": "Firelink Gauntlets",
             "leggings": "Firelink Leggings"
-        }
-    },
-    {
-        "name": "Golden Set",
-        "pieces": {
-            "helms": "Golden Crown",
-            "gauntlets": "Golden Bracelets"
         }
     },
     {
@@ -364,14 +370,6 @@
         }
     },
     {
-        "name": "Iron Set",
-        "pieces": {
-            "helms": "Iron Helm",
-            "gauntlets": "Iron Bracelets",
-            "leggings": "Iron Leggings"
-        }
-    },
-    {
         "name": "Jailer Set",
         "pieces": {
             "chests": "Jailer Robe",
@@ -397,8 +395,9 @@
         }
     },
     {
-        "name": "Leather Set",
+        "name": "Leather Armor Set",
         "pieces": {
+            "helms": "Pharis's Hat",
             "chests": "Leather Armor",
             "gauntlets": "Leather Gloves",
             "leggings": "Leather Boots"
@@ -447,19 +446,19 @@
         }
     },
     {
-        "name": "Mirrah Set",
-        "pieces": {
-            "chests": "Mirrah Vest",
-            "gauntlets": "Mirrah Gloves",
-            "leggings": "Mirrah Trousers"
-        }
-    },
-    {
         "name": "Mirrah Chain Set",
         "pieces": {
             "chests": "Mirrah Chain Mail",
             "gauntlets": "Mirrah Chain Gloves",
             "leggings": "Mirrah Chain Leggings"
+        }
+    },
+    {
+        "name": "Mirrah Set",
+        "pieces": {
+            "chests": "Mirrah Vest",
+            "gauntlets": "Mirrah Gloves",
+            "leggings": "Mirrah Trousers"
         }
     },
     {

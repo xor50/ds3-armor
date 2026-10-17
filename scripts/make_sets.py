@@ -28,10 +28,50 @@ STEM_ALIASES = {
     'Archdeacon Holy':    'Archdeacon',    # Archdeacon Holy Garb
 }
 
+# Sets that can't be derived from the names. Their items are removed from the automatic grouping.
+# Items that don't exist in armors.json are skipped with a warning (add them to the data and rerun).
+MANUAL_SETS = {
+    'Dragonscale Set': {
+        'helms': 'Golden Crown',
+        'chests': 'Dragonscale Armor',
+        'gauntlets': 'Golden Bracelets',
+        'leggings': 'Dragonscale Waistcloth',
+    },
+    'Black Set': {
+        'helms': 'Billed Mask',
+        'chests': 'Black Dress',
+        'gauntlets': 'Black Gauntlets',
+        'leggings': 'Black Leggings',
+    },
+    'Leather Armor Set': {
+        'helms': "Pharis's Hat",
+        'chests': 'Leather Armor',
+        'gauntlets': 'Leather Gloves',
+        'leggings': 'Leather Boots',
+    },
+    'Chain Armor Set': {
+        'helms': 'Chain Helm',
+        'chests': 'Chain Armor',
+        'gauntlets': 'Leather Gauntlets',
+        'leggings': 'Chain Leggings',
+    },
+    'Armor of Favor Set': {
+        'helms': 'Helm of Favor',
+        'chests': 'Embraced Armor of Favor',
+        'gauntlets': 'Gauntlets of Favor',
+        'leggings': 'Leggings of Favor',    # not in armors.json (yet)
+    },
+    'Armor of the Sun Set': {
+        'helms': 'Iron Helm',
+        'chests': 'Armor of the Sun',
+        'gauntlets': 'Iron Bracelets',
+        'leggings': 'Iron Leggings',
+    },
+}
+
 # Groups that contain several items of the same kind: which one belongs to the set
-# (the others are left out of it). TO VERIFY in game.
+# (the others are left out of it). Empty for now: add entries when the script complains.
 AMBIGUOUS = {
-    ('Leather', 'gauntlets'): 'Leather Gloves',   # not 'Leather Gauntlets'
 }
 
 
@@ -50,13 +90,32 @@ def main():
     with open('data/armors.json') as f:
         armors = json.load(f)
 
-    groups = collections.defaultdict(lambda: collections.defaultdict(list))
-    for kind in KINDS:
-        for item in armors[kind]:
-            groups[stem_of(item['name'])][kind].append(item['name'])
+    known = { kind: set(i['name'] for i in armors[kind]) for kind in KINDS }
 
     sets = []
     problems = []
+    manual_items = set()
+
+    for set_name in sorted(MANUAL_SETS):
+        pieces = {}
+
+        for kind in KINDS:
+            name = MANUAL_SETS[set_name].get(kind)
+            if name is None:
+                continue
+            if name not in known[kind]:
+                print('Warning: "%s" (%s slot of the %s) is not in armors.json, skipped' % (name, kind, set_name))
+                continue
+            pieces[kind] = name
+            manual_items.add((kind, name))
+
+        sets.append({ 'name': set_name, 'pieces': pieces })
+
+    groups = collections.defaultdict(lambda: collections.defaultdict(list))
+    for kind in KINDS:
+        for item in armors[kind]:
+            if (kind, item['name']) not in manual_items:
+                groups[stem_of(item['name'])][kind].append(item['name'])
 
     for stem in sorted(groups):
         pieces = {}
@@ -82,8 +141,9 @@ def main():
         print('\n'.join('  ' + p for p in problems))
         sys.exit(1)
 
+    sets.sort(key=lambda s: s['name'])
+
     # Sanity checks: every item exists, and belongs to at most one set
-    known = { kind: set(i['name'] for i in armors[kind]) for kind in KINDS }
     seen = set()
     for s in sets:
         for kind, name in s['pieces'].items():
