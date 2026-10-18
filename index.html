@@ -177,6 +177,68 @@
             saveUserData();
         }
 
+        var CRITERION_DIVIDERS = { magicdef: true, bleedres: true, poise: true };
+
+        function createCriterionIcon(value)
+        {
+            if (value === '-')
+                return $('<span class="criterion-icon"></span>');
+
+            return $('<img class="criterion-icon" alt="" />').attr('src', 'images/icon-' + value + '.png');
+        }
+
+        // The native <select> elements can't show icons: they are replaced by dropdown menus,
+        // and stay in the page (hidden) as the source of truth
+        function setupCriterionDropdowns()
+        {
+            $('select.criterion-select').each(function() {
+                var select = $(this);
+
+                var toggle = $('<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" ' +
+                               'aria-haspopup="true" aria-expanded="false"></button>');
+                var menu = $('<ul class="dropdown-menu"></ul>');
+                var group = $('<div class="input-group-btn criterion-dropdown"></div>').append(toggle).append(menu);
+
+                var previous = null;
+                select.find('option').each(function() {
+                    var value = this.value;
+
+                    // Separators between the groups of stats
+                    if (previous !== null && (CRITERION_DIVIDERS[value] === true || previous === '-'))
+                        menu.append('<li role="separator" class="divider"></li>');
+                    previous = value;
+
+                    var link = $('<a href="#"></a>')
+                        .data('value', value)
+                        .append(createCriterionIcon(value))
+                        .append(document.createTextNode($(this).text()));
+
+                    menu.append($('<li></li>').append(link));
+                });
+
+                function refresh()
+                {
+                    var value = select.val();
+
+                    toggle.empty()
+                        .append(createCriterionIcon(value))
+                        .append($('<span></span>').text(select.find('option:selected').text()))
+                        .append('<span class="caret"></span>');
+
+                    menu.find('li').removeClass('active');
+                    menu.find('a').filter(function() { return $(this).data('value') === value; }).parent().addClass('active');
+                }
+
+                menu.on('click', 'a', function(e) {
+                    e.preventDefault();
+                    select.val($(this).data('value')).trigger('change');
+                });
+
+                select.on('change', refresh).addClass('hidden').after(group);
+                refresh();
+            });
+        }
+
         function applyTheme(theme)
         {
             document.documentElement.setAttribute('data-theme', theme);
@@ -187,20 +249,21 @@
         var armor_sets_ui = [];   // { pieces: [{ kind, name }], checkbox, count_label, row, search }
         var single_armors = { helms: [], chests: [], gauntlets: [], leggings: [] };      // names of the items without a set
 
-        // Creates the "owned" checkbox of an item; 'highlight' is the element highlighted while the item is owned
-        function createOwnedCheckbox(kind, name, highlight)
+        // Creates the "owned" checkbox of an item; 'highlight' is the element that gets the CSS class
+        // 'highlight_class' while the item is owned
+        function createOwnedCheckbox(kind, name, highlight, highlight_class)
         {
             var input = document.createElement('input');
             input.type = 'checkbox';
 
             var owned = (user_data.available_armors[kind].indexOf(name) >= 0);
             input.checked = owned;
-            $(highlight).toggleClass('bg-warning', owned);
+            $(highlight).toggleClass(highlight_class, owned);
 
             if (armor_checkboxes[kind][name] === undefined)
                 armor_checkboxes[kind][name] = [];
 
-            armor_checkboxes[kind][name].push({ input: input, highlight: highlight });
+            armor_checkboxes[kind][name].push({ input: input, highlight: highlight, highlight_class: highlight_class });
 
             $(input).click(function() {
                 setArmorOwned(kind, name, this.checked);
@@ -227,7 +290,7 @@
                 for (var i = 0; i < entries.length; ++i)
                 {
                     entries[i].input.checked = owned;
-                    $(entries[i].highlight).toggleClass('bg-warning', owned);
+                    $(entries[i].highlight).toggleClass(entries[i].highlight_class, owned);
                 }
             }
         }
@@ -295,7 +358,7 @@
 
                 armor_set.checkbox.checked = (owned === total);
                 armor_set.checkbox.indeterminate = (owned > 0 && owned < total);
-                $(armor_set.row).toggleClass('bg-warning', owned === total);
+                $(armor_set.row).toggleClass('armor-set-complete', owned === total);
                 $(armor_set.count_label).text('(' + owned + '/' + total + ')');
 
                 if (owned === total)
@@ -346,7 +409,7 @@
             var head_row = document.createElement('tr');
             thead.appendChild(head_row);
 
-            var headers = ['Set', 'All', 'Helm', 'Chest', 'Gloves', 'Legging'];
+            var headers = ['All', 'Set', 'Helm', 'Chest', 'Gloves', 'Legging'];
             for (var h = 0; h < headers.length; ++h)
             {
                 var th = document.createElement('th');
@@ -374,8 +437,17 @@
                 var tr = document.createElement('tr');
                 tbody.appendChild(tr);
 
-                // Name of the set
+                // Checkbox of the whole set
                 var td = document.createElement('td');
+                td.className = 'centered';
+                tr.appendChild(td);
+
+                var checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                td.appendChild(checkbox);
+
+                // Name of the set
+                td = document.createElement('td');
                 td.className = 'armor-set-title';
                 tr.appendChild(td);
 
@@ -387,15 +459,6 @@
                 var count_label = document.createElement('small');
                 count_label.className = 'text-muted';
                 td.appendChild(count_label);
-
-                // Checkbox of the whole set
-                td = document.createElement('td');
-                td.className = 'centered';
-                tr.appendChild(td);
-
-                var checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                td.appendChild(checkbox);
 
                 var armor_set = {
                     pieces: pieces,
@@ -434,7 +497,7 @@
                     label.className = 'armor-piece';
                     td.appendChild(label);
 
-                    label.appendChild(createOwnedCheckbox(piece.kind, piece.name, td));
+                    label.appendChild(createOwnedCheckbox(piece.kind, piece.name, td, 'bg-warning'));
 
                     var img = document.createElement('img');
                     img.className = 'armor-icon';
@@ -485,7 +548,7 @@
                 td.className = 'centered';
                 tr.appendChild(td);
 
-                td.appendChild(createOwnedCheckbox(kind, items[i].name, tr));
+                td.appendChild(createOwnedCheckbox(kind, items[i].name, tr, 'bg-success'));
 
                 td = document.createElement('td');
                 tr.appendChild(td);
@@ -1172,7 +1235,7 @@
 
                     <div class="input-group">
                         <div class="input-group-addon"><strong>Criterion</strong></div>
-                        <select class="form-control" id="criterion1">
+                        <select class="form-control criterion-select" id="criterion1">
                           <option value="physicaldef">Physical Defense</option>
                           <option value="strikedef">Strike Defense</option>
                           <option value="slashdef">Slash Defense</option>
@@ -1190,7 +1253,7 @@
                     </div>
                     <div class="input-group">
                         <div class="input-group-addon hidden-wide"><strong>Criterion 2</strong></div>
-                        <select class="form-control" id="criterion2">
+                        <select class="form-control criterion-select" id="criterion2">
                           <option value="-">-</option>
                           <option value="physicaldef">Physical Defense</option>
                           <option value="strikedef">Strike Defense</option>
@@ -1209,7 +1272,7 @@
                     </div>
                     <div class="input-group">
                         <div class="input-group-addon hidden-wide"><strong>Criterion 3</strong></div>
-                        <select class="form-control" id="criterion3">
+                        <select class="form-control criterion-select" id="criterion3">
                           <option value="-">-</option>
                           <option value="physicaldef">Physical Defense</option>
                           <option value="strikedef">Strike Defense</option>
@@ -1416,6 +1479,8 @@
 
             for (var c = 0; c < 3; ++c)
                 $('#criterion' + (c + 1)).val(user_data.criterions[c] || '-');
+
+            setupCriterionDropdowns();
 
             // Keep the parameters persistent as soon as they are edited
             $('#max_equip_load, #limit_equip_load, #weapons_load').on('input change', saveParameters);

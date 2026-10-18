@@ -126,6 +126,57 @@ table.armor-list label.armor-piece img.armor-icon
     flex: none;
 }
 
+/* Owning a whole set: green (owning only some of its pieces stays yellow, see .bg-warning) */
+table.armor-list tr.armor-set-complete > td
+{
+    background-color: #dff0d8;
+}
+
+
+.table-hover>tbody>tr.bg-success:hover
+{
+    background-color: #d0e9c6;
+}
+
+
+/* Criterion dropdowns */
+.criterion-dropdown > .btn
+{
+    min-width: 200px;
+    padding-right: 30px;
+    text-align: left;
+}
+
+
+.criterion-dropdown .caret
+{
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    margin-top: -2px;
+}
+
+
+.criterion-icon
+{
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+
+.criterion-dropdown .dropdown-menu
+{
+    min-width: 100%;
+}
+
+
+.criterion-dropdown .dropdown-menu > li > a
+{
+    white-space: nowrap;
+}
 
 /* ------------------------------------------------------------------ */
 /* Dark theme (toggled through <html data-theme="dark">)               */
@@ -257,7 +308,10 @@ html[data-theme="dark"] .btn-default
 }
 
 html[data-theme="dark"] .btn-default:hover,
-html[data-theme="dark"] .btn-default:focus
+html[data-theme="dark"] .btn-default:focus,
+html[data-theme="dark"] .btn-default:active,
+html[data-theme="dark"] .btn-default.active,
+html[data-theme="dark"] .open > .dropdown-toggle.btn-default
 {
     background-color: #3a4147;
     border-color: #5a6168;
@@ -276,4 +330,41 @@ html[data-theme="dark"] .alert-warning
     background-color: #4a4222;
     border-color: #7a6420;
     color: #f3e6b8;
+}
+
+html[data-theme="dark"] .bg-success,
+html[data-theme="dark"] .table-hover>tbody>tr.bg-success:hover,
+html[data-theme="dark"] table.armor-list tr.armor-set-complete > td
+{
+    background-color: #2b4a2e;
+}
+
+html[data-theme="dark"] .dropdown-menu
+{
+    background-color: #23272b;
+    border-color: #4a5056;
+}
+
+html[data-theme="dark"] .dropdown-menu > li > a
+{
+    color: #d6d9dc;
+}
+
+html[data-theme="dark"] .dropdown-menu > li > a:hover,
+html[data-theme="dark"] .dropdown-menu > li > a:focus
+{
+    background-color: #3a4147;
+    color: #fff;
+}
+
+html[data-theme="dark"] .dropdown-menu > .active > a,
+html[data-theme="dark"] .dropdown-menu > .active > a:hover
+{
+    background-color: #2a5580;
+    color: #fff;
+}
+
+html[data-theme="dark"] .dropdown-menu .divider
+{
+    background-color: #3a3f44;
 }

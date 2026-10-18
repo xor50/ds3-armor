@@ -11,6 +11,7 @@
     {
         "name": "Antiquated Set",
         "pieces": {
+            "helms": "Crown of Dusk",
             "chests": "Antiquated Dress",
             "gauntlets": "Antiquated Gloves"
         }
@@ -77,6 +78,7 @@
     {
         "name": "Black Leather Set",
         "pieces": {
+            "helms": "Thief Mask",
             "chests": "Black Leather Armor",
             "gauntlets": "Black Leather Gloves",
             "leggings": "Black Leather Boots"
@@ -157,6 +159,7 @@
     {
         "name": "Cornyx's Set",
         "pieces": {
+            "helms": "Old Sage's Blindfold",
             "chests": "Cornyx's Garb",
             "gauntlets": "Cornyx's Wrap",
             "leggings": "Cornyx's Skirt"
@@ -199,6 +202,7 @@
     {
         "name": "Deserter Set",
         "pieces": {
+            "helms": "Steel Soldier Helm",
             "chests": "Deserter Armor",
             "leggings": "Deserter Trousers"
         }
@@ -372,6 +376,7 @@
     {
         "name": "Jailer Set",
         "pieces": {
+            "helms": "Aristocrat's Mask",
             "chests": "Jailer Robe",
             "leggings": "Jailer Trousers"
         }
@@ -406,6 +411,7 @@
     {
         "name": "Leonhard's Set",
         "pieces": {
+            "helms": "Silver Mask",
             "chests": "Leonhard's Garb",
             "gauntlets": "Leonhard's Gauntlets",
             "leggings": "Leonhard's Trousers"
@@ -448,6 +454,7 @@
     {
         "name": "Mirrah Chain Set",
         "pieces": {
+            "helms": "Creighton's Steel Mask",
             "chests": "Mirrah Chain Mail",
             "gauntlets": "Mirrah Chain Gloves",
             "leggings": "Mirrah Chain Leggings"
@@ -456,6 +463,7 @@
     {
         "name": "Mirrah Set",
         "pieces": {
+            "helms": "Lucatiel Mask",
             "chests": "Mirrah Vest",
             "gauntlets": "Mirrah Gloves",
             "leggings": "Mirrah Trousers"
@@ -518,6 +526,7 @@
     {
         "name": "Pale Shade Set",
         "pieces": {
+            "helms": "Sneering Mask",
             "chests": "Pale Shade Robe",
             "gauntlets": "Pale Shade Gloves",
             "leggings": "Pale Shade Trousers"

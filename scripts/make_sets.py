@@ -26,6 +26,17 @@ STEM_ALIASES = {
     "Karla's Pointed":    "Karla's",       # Karla's Pointed Hat
     'Archdeacon White':   'Archdeacon',    # Archdeacon White Crown
     'Archdeacon Holy':    'Archdeacon',    # Archdeacon Holy Garb
+
+    # Helms with their own name
+    "Aristocrat's":       'Jailer',        # Aristocrat's Mask
+    "Creighton's Steel":  'Mirrah Chain',  # Creighton's Steel Mask
+    'Dusk':               'Antiquated',    # Crown of Dusk
+    'Lucatiel':           'Mirrah',        # Lucatiel Mask
+    'Thief':              'Black Leather', # Thief Mask
+    'Steel Soldier':      'Deserter',      # Steel Soldier Helm
+    'Sneering':           'Pale Shade',    # Sneering Mask
+    'Silver':             "Leonhard's",    # Silver Mask
+    "Old Sage's":         "Cornyx's",      # Old Sage's Blindfold
 }
 
 # Sets that can't be derived from the names. Their items are removed from the automatic grouping.
@@ -79,10 +90,11 @@ def stem_of(name):
     # "Helm of Thorns", "Embraced Armor of Favor" -> "Thorns", "Favor"
     match = re.match(r'^.+? of (.+)$', name)
     if match:
-        return match.group(1)
+        stem = match.group(1)
+    else:
+        words = name.split()
+        stem = ' '.join(words[:-1]) if len(words) > 1 else name
 
-    words = name.split()
-    stem = ' '.join(words[:-1]) if len(words) > 1 else name
     return STEM_ALIASES.get(stem, stem)
 
 
