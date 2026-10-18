@@ -34,6 +34,7 @@
             max_equip_load: 50.0,
             limit_equip_load: 70.0,
             weapons_load: 5.0,
+            rings_load: 0.0,
             criterions: ['physicaldef', '-', '-'],
 
             equipped_armor: {
@@ -130,7 +131,7 @@
                 stored.limit_equip_load = 70.0;
 
             // Merge into the defaults, so that missing or malformed fields can't break the page
-            var numeric = ['max_equip_load', 'limit_equip_load', 'weapons_load'];
+            var numeric = ['max_equip_load', 'limit_equip_load', 'weapons_load', 'rings_load'];
             for (var i = 0; i < numeric.length; ++i)
             {
                 if (typeof stored[numeric[i]] === 'number' && isFinite(stored[numeric[i]]))
@@ -168,6 +169,7 @@
             user_data.max_equip_load = _readNumber('max_equip_load', user_data.max_equip_load);
             user_data.limit_equip_load = _readNumber('limit_equip_load', user_data.limit_equip_load);
             user_data.weapons_load = _readNumber('weapons_load', user_data.weapons_load);
+            user_data.rings_load = _readNumber('rings_load', user_data.rings_load);
             user_data.criterions = [
                 $('#criterion1').val(),
                 $('#criterion2').val(),
@@ -271,6 +273,18 @@
             });
 
             return input;
+        }
+
+        // Makes the whole table cell toggle its checkbox, not only the small checkbox itself
+        function makeCellToggle(cell, input)
+        {
+            $(cell).addClass('clickable-cell').click(function(e) {
+                // The checkbox itself, and the <label>s that already forward their clicks to it, work natively
+                if (e.target === input || $(e.target).closest('label', cell).length > 0)
+                    return;
+
+                input.click();
+            });
         }
 
         // Marks an item as owned or not, in the data and in its checkbox (does not save)
@@ -445,6 +459,7 @@
                 var checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
                 td.appendChild(checkbox);
+                makeCellToggle(td, checkbox);
 
                 // Name of the set
                 td = document.createElement('td');
@@ -497,7 +512,9 @@
                     label.className = 'armor-piece';
                     td.appendChild(label);
 
-                    label.appendChild(createOwnedCheckbox(piece.kind, piece.name, td, 'bg-warning'));
+                    var piece_checkbox = createOwnedCheckbox(piece.kind, piece.name, td, 'bg-warning');
+                    label.appendChild(piece_checkbox);
+                    makeCellToggle(td, piece_checkbox);
 
                     var img = document.createElement('img');
                     img.className = 'armor-icon';
@@ -548,7 +565,9 @@
                 td.className = 'centered';
                 tr.appendChild(td);
 
-                td.appendChild(createOwnedCheckbox(kind, items[i].name, tr, 'bg-success'));
+                var item_checkbox = createOwnedCheckbox(kind, items[i].name, tr, 'bg-success');
+                td.appendChild(item_checkbox);
+                makeCellToggle(td, item_checkbox);
 
                 td = document.createElement('td');
                 tr.appendChild(td);
@@ -927,11 +946,20 @@
         }
 
 
+        // Weapons and rings only matter through their weight: it is simply added to the one of the armor
+        function getOtherLoad()
+        {
+            return Number($('#weapons_load').val()) + Number($('#rings_load').val());
+        }
+
+
         function optimize()
         {
             var max_equip_load = Number($('#max_equip_load').val());
             var limit_equip_load = Number($('#limit_equip_load').val());
-            var weapons_load = Number($('#weapons_load').val());
+            var other_load = getOtherLoad();
+
+            $('.tooltip').remove();
 
             var tbody = $('#results tbody')[0];
             while (tbody.firstChild)
@@ -940,13 +968,13 @@
             var message = $('#results_message');
             message.hide();
 
-            if (!(max_equip_load > 0) || !isFinite(limit_equip_load) || !isFinite(weapons_load))
+            if (!(max_equip_load > 0) || !isFinite(limit_equip_load) || !isFinite(other_load))
             {
-                message.text('Please enter valid numbers for the max equip load, the limit and the weapons load.').show();
+                message.text('Please enter valid numbers for the max equip load, the limit, the weapons load and the rings load.').show();
                 return;
             }
 
-            var max_total_equip_load = limit_equip_load / 100.0 * max_equip_load - weapons_load;
+            var max_total_equip_load = limit_equip_load / 100.0 * max_equip_load - other_load;
 
             var criteria = buildCriteria([
                 $('#criterion1').val(),
@@ -997,7 +1025,7 @@
         {
             var td;
             var max_equip_load = Number($('#max_equip_load')[0].value);
-            var weapons_load = Number($('#weapons_load')[0].value);
+            var other_load = getOtherLoad();
 
             var tr = document.createElement('tr');
             tbody.appendChild(tr);
@@ -1010,7 +1038,10 @@
                 var equip_button = document.createElement('button');
                 equip_button.type = 'button';
                 equip_button.className = 'btn btn-default';
+                equip_button.title = 'Equip this result.';
+                equip_button.setAttribute('aria-label', 'Equip this result.');
                 td.appendChild(equip_button);
+                $(equip_button).tooltip({ container: 'body', placement: 'right', trigger: 'hover focus' });
 
                 var span = document.createElement('span');
                 span.className = 'glyphicon glyphicon-pushpin';
@@ -1045,7 +1076,7 @@
                         column.removeClass('upgrade');
 
                         var value = Number(column.text().substr(0, column.text().length - 1));
-                        var ref = Number(((armor_set.weight + weapons_load) / max_equip_load * 100).toFixed(1));
+                        var ref = Number(((armor_set.weight + other_load) / max_equip_load * 100).toFixed(1));
 
                         if (value < ref)
                             column.addClass('upgrade');
@@ -1121,7 +1152,7 @@
 
             td = document.createElement('td');
             td.className = 'centered';
-            $(td).text(((armor_set.weight + weapons_load) / max_equip_load * 100).toFixed(1) + '%');
+            $(td).text(((armor_set.weight + other_load) / max_equip_load * 100).toFixed(1) + '%');
             tr.appendChild(td);
 
             if (comparison_set != null)
@@ -1219,6 +1250,7 @@
             </div>
             <div class="panel-body">
                 <form class="form-inline">
+                    <div class="parameters-row">
                     <div class="input-group">
                         <div class="input-group-addon"><strong>Max Equip Load</strong></div>
                         <input type="text" class="form-control small" id="max_equip_load" value="50" />
@@ -1232,7 +1264,13 @@
                         <div class="input-group-addon"><strong>Weapons Load</strong></div>
                         <input type="text" class="form-control small" id="weapons_load" value="5.0" />
                     </div>
+                    <div class="input-group">
+                        <div class="input-group-addon"><strong>Rings Load</strong></div>
+                        <input type="text" class="form-control small" id="rings_load" value="0" />
+                    </div>
+                    </div>
 
+                    <div class="parameters-row">
                     <div class="input-group">
                         <div class="input-group-addon"><strong>Criterion</strong></div>
                         <select class="form-control criterion-select" id="criterion1">
@@ -1291,6 +1329,7 @@
                     </div>
 
                     <button type="button" class="btn btn-success" id="btn_search">Search</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -1476,6 +1515,7 @@
             $('#max_equip_load').val(user_data.max_equip_load);
             $('#limit_equip_load').val(user_data.limit_equip_load);
             $('#weapons_load').val(user_data.weapons_load);
+            $('#rings_load').val(user_data.rings_load);
 
             for (var c = 0; c < 3; ++c)
                 $('#criterion' + (c + 1)).val(user_data.criterions[c] || '-');
@@ -1483,11 +1523,11 @@
             setupCriterionDropdowns();
 
             // Keep the parameters persistent as soon as they are edited
-            $('#max_equip_load, #limit_equip_load, #weapons_load').on('input change', saveParameters);
+            $('#max_equip_load, #limit_equip_load, #weapons_load, #rings_load').on('input change', saveParameters);
             $('#criterion1, #criterion2, #criterion3').on('change', saveParameters);
 
             // Enter in a parameter field starts the search
-            $('#max_equip_load, #limit_equip_load, #weapons_load').on('keydown', function(e) {
+            $('#max_equip_load, #limit_equip_load, #weapons_load, #rings_load').on('keydown', function(e) {
                 if (e.which === 13)
                 {
                     e.preventDefault();

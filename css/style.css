@@ -178,6 +178,27 @@ table.armor-list tr.armor-set-complete > td
     white-space: nowrap;
 }
 
+/* The parameters are on two rows */
+.parameters-row
+{
+    margin-bottom: 10px;
+}
+
+
+.parameters-row:last-child
+{
+    margin-bottom: 0;
+}
+
+
+/* Table cells that toggle their checkbox when clicked anywhere */
+td.clickable-cell
+{
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
 /* ------------------------------------------------------------------ */
 /* Dark theme (toggled through <html data-theme="dark">)               */
 /* ------------------------------------------------------------------ */
