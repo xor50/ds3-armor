@@ -183,10 +183,34 @@
             $('#theme_toggle_label').text(theme === 'dark' ? 'Light mode' : 'Dark mode');
         }
 
-        var armor_checkboxes = { helms: {}, chests: {}, gauntlets: {}, leggings: {} };   // name -> { input, row }
+        var armor_checkboxes = { helms: {}, chests: {}, gauntlets: {}, leggings: {} };   // item name -> [{ input, highlight }]
         var armor_sets_ui = [];   // { pieces: [{ kind, name }], checkbox, count_label, row, search }
+        var single_armors = { helms: [], chests: [], gauntlets: [], leggings: [] };      // names of the items without a set
 
-        // Marks an item as owned or not, in the data and in its table row (does not save)
+        // Creates the "owned" checkbox of an item; 'highlight' is the element highlighted while the item is owned
+        function createOwnedCheckbox(kind, name, highlight)
+        {
+            var input = document.createElement('input');
+            input.type = 'checkbox';
+
+            var owned = (user_data.available_armors[kind].indexOf(name) >= 0);
+            input.checked = owned;
+            $(highlight).toggleClass('bg-warning', owned);
+
+            if (armor_checkboxes[kind][name] === undefined)
+                armor_checkboxes[kind][name] = [];
+
+            armor_checkboxes[kind][name].push({ input: input, highlight: highlight });
+
+            $(input).click(function() {
+                setArmorOwned(kind, name, this.checked);
+                ownershipChanged();
+            });
+
+            return input;
+        }
+
+        // Marks an item as owned or not, in the data and in its checkbox (does not save)
         function setArmorOwned(kind, name, owned)
         {
             var list = user_data.available_armors[kind];
@@ -197,11 +221,14 @@
             else if (!owned && index >= 0)
                 list.splice(index, 1);
 
-            var entry = armor_checkboxes[kind][name];
-            if (entry)
+            var entries = armor_checkboxes[kind][name];
+            if (entries !== undefined)
             {
-                entry.input.checked = owned;
-                $(entry.row).toggleClass('bg-warning', owned);
+                for (var i = 0; i < entries.length; ++i)
+                {
+                    entries[i].input.checked = owned;
+                    $(entries[i].highlight).toggleClass('bg-warning', owned);
+                }
             }
         }
 
@@ -216,9 +243,18 @@
             saveUserData();
         }
 
+        // Counter of the "single items" panels: owned / total
         function updateArmorsCounter(kind)
         {
-            $('#nb_available_' + kind).text('(' + user_data.available_armors[kind].length + ')');
+            var owned = 0;
+
+            for (var i = 0; i < single_armors[kind].length; ++i)
+            {
+                if (user_data.available_armors[kind].indexOf(single_armors[kind][i]) >= 0)
+                    ++owned;
+            }
+
+            $('#nb_available_' + kind).text('(' + owned + '/' + single_armors[kind].length + ')');
         }
 
         function countOwnedPieces(armor_set)
@@ -235,7 +271,7 @@
             return owned;
         }
 
-        // Clicking a set owns all its pieces, unless they are all owned already: then it clears them
+        // Clicking the checkbox of a set owns all its pieces, unless they are all owned already: then it clears them
         function toggleArmorSet(armor_set)
         {
             var owned = (countOwnedPieces(armor_set) !== armor_set.pieces.length);
@@ -246,7 +282,7 @@
             ownershipChanged();
         }
 
-        // Refreshes the checkboxes (checked / partially checked) and counters of the sets table
+        // Refreshes the checkbox (checked / partially checked) and the counters of the sets
         function updateSetsTable()
         {
             var complete = 0;
@@ -269,11 +305,14 @@
             $('#nb_available_sets').text('(' + complete + '/' + armor_sets_ui.length + ')');
         }
 
+        // Creates the table of the sets, with a checkbox for the set and one for each of its pieces.
+        // Returns the items that are part of a set: { helms: { name: true }, ... }
         function setupSetsTable(parent, sets)
         {
             var kinds = ['helms', 'chests', 'gauntlets', 'leggings'];
+            var used = { helms: {}, chests: {}, gauntlets: {}, leggings: {} };
 
-            // Items by name, for the icons
+            // Items by name
             var lookup = {};
             for (var k = 0; k < kinds.length; ++k)
             {
@@ -292,10 +331,14 @@
             filter.placeholder = 'Filter by set or item name...';
             filter_box.appendChild(filter);
 
+            var wrapper = document.createElement('div');
+            wrapper.className = 'table-responsive';
+            parent.appendChild(wrapper);
+
             var table = document.createElement('table');
             table.id = 'armor_sets';
             table.className = 'table table-hover table-bordered armor-list';
-            parent.appendChild(table);
+            wrapper.appendChild(table);
 
             var thead = document.createElement('thead');
             table.appendChild(thead);
@@ -303,13 +346,13 @@
             var head_row = document.createElement('tr');
             thead.appendChild(head_row);
 
-            var th = document.createElement('th');
-            th.textContent = 'Owned';
-            head_row.appendChild(th);
-
-            th = document.createElement('th');
-            th.textContent = 'Set';
-            head_row.appendChild(th);
+            var headers = ['Set', 'All', 'Helm', 'Chest', 'Gloves', 'Legging'];
+            for (var h = 0; h < headers.length; ++h)
+            {
+                var th = document.createElement('th');
+                th.textContent = headers[h];
+                head_row.appendChild(th);
+            }
 
             var tbody = document.createElement('tbody');
             table.appendChild(tbody);
@@ -331,46 +374,10 @@
                 var tr = document.createElement('tr');
                 tbody.appendChild(tr);
 
+                // Name of the set
                 var td = document.createElement('td');
-                td.className = 'centered';
+                td.className = 'armor-set-title';
                 tr.appendChild(td);
-
-                var checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                td.appendChild(checkbox);
-
-                td = document.createElement('td');
-                tr.appendChild(td);
-
-                var search = sets[i].name;
-
-                // One slot per kind of item, so that the icons (and the names) line up between sets
-                for (var j = 0; j < kinds.length; ++j)
-                {
-                    var piece = null;
-                    for (var p = 0; p < pieces.length; ++p)
-                    {
-                        if (pieces[p].kind === kinds[j])
-                            piece = pieces[p];
-                    }
-
-                    if (piece !== null)
-                    {
-                        var img = document.createElement('img');
-                        img.className = 'armor-icon armor-set-icon';
-                        img.src = 'images/' + (piece.item.image != null ? piece.item.image : 'placeholder-icon.png');
-                        img.title = piece.name;
-                        td.appendChild(img);
-
-                        search += ' ' + piece.name;
-                    }
-                    else
-                    {
-                        var gap = document.createElement('span');
-                        gap.className = 'armor-set-gap';
-                        td.appendChild(gap);
-                    }
-                }
 
                 var name_label = document.createElement('span');
                 name_label.className = 'armor-set-name';
@@ -378,22 +385,69 @@
                 td.appendChild(name_label);
 
                 var count_label = document.createElement('small');
-                count_label.className = 'text-muted armor-set-count';
+                count_label.className = 'text-muted';
                 td.appendChild(count_label);
+
+                // Checkbox of the whole set
+                td = document.createElement('td');
+                td.className = 'centered';
+                tr.appendChild(td);
+
+                var checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                td.appendChild(checkbox);
 
                 var armor_set = {
                     pieces: pieces,
                     checkbox: checkbox,
                     count_label: count_label,
                     row: tr,
-                    search: search.toLowerCase(),
                 };
-
-                armor_sets_ui.push(armor_set);
 
                 $(checkbox).click((function(armor_set) {
                     return function() { toggleArmorSet(armor_set); };
                 })(armor_set));
+
+                // One column per kind of item (empty if the set has no such piece)
+                var search = sets[i].name;
+
+                for (var c = 0; c < kinds.length; ++c)
+                {
+                    td = document.createElement('td');
+                    td.className = 'armor-set-piece';
+                    tr.appendChild(td);
+
+                    var piece = null;
+                    for (var p = 0; p < pieces.length; ++p)
+                    {
+                        if (pieces[p].kind === kinds[c])
+                            piece = pieces[p];
+                    }
+
+                    if (piece === null)
+                        continue;
+
+                    used[piece.kind][piece.name] = true;
+                    search += ' ' + piece.name;
+
+                    var label = document.createElement('label');
+                    label.className = 'armor-piece';
+                    td.appendChild(label);
+
+                    label.appendChild(createOwnedCheckbox(piece.kind, piece.name, td));
+
+                    var img = document.createElement('img');
+                    img.className = 'armor-icon';
+                    img.src = 'images/' + (piece.item.image != null ? piece.item.image : 'placeholder-icon.png');
+                    label.appendChild(img);
+
+                    var piece_name = document.createElement('span');
+                    $(piece_name).text(piece.name);
+                    label.appendChild(piece_name);
+                }
+
+                armor_set.search = search.toLowerCase();
+                armor_sets_ui.push(armor_set);
             }
 
             $(filter).on('input', function() {
@@ -404,16 +458,25 @@
             });
 
             updateSetsTable();
+
+            return used;
         }
 
 
-        function setupArmorTable(parent, kind, data)
+        // Creates the table of the items of a kind that are not part of a set
+        function setupArmorTable(parent, kind, items)
         {
+            if (items.length === 0)
+            {
+                $('#panel_' + kind).hide();
+                return;
+            }
+
             createArmorTable(parent, kind);
 
             var tbody = $('#' + kind + ' tbody')[0];
 
-            for (var i = 0; i < data[kind].length; ++i)
+            for (var i = 0; i < items.length; ++i)
             {
                 var tr = document.createElement('tr');
                 tbody.appendChild(tr);
@@ -422,37 +485,18 @@
                 td.className = 'centered';
                 tr.appendChild(td);
 
-                var input = document.createElement('input');
-                input.type = 'checkbox';
-                td.appendChild(input);
-
-                armor_checkboxes[kind][data[kind][i].name] = { input: input, row: tr };
-
-                if (user_data.available_armors[kind].indexOf(data[kind][i].name) >= 0)
-                {
-                    input.checked = true;
-                    $(tr).addClass('bg-warning');
-                }
-
-                input.data = {
-                    item: data[kind][i].name,
-                };
-
-                $(input).click(function() {
-                    setArmorOwned(kind, this.data.item, this.checked);
-                    ownershipChanged();
-                });
+                td.appendChild(createOwnedCheckbox(kind, items[i].name, tr));
 
                 td = document.createElement('td');
                 tr.appendChild(td);
 
                 var img = document.createElement('img');
                 img.className = 'armor-icon';
-                img.src = 'images/' + (data[kind][i].image != null ? data[kind][i].image : 'placeholder-icon.png') ;
+                img.src = 'images/' + (items[i].image != null ? items[i].image : 'placeholder-icon.png') ;
                 td.appendChild(img);
 
                 var span = document.createElement('span');
-                $(span).text(data[kind][i].name);
+                $(span).text(items[i].name);
                 td.appendChild(span);
 
                 var columns = [
@@ -476,7 +520,7 @@
                 {
                     td = document.createElement('td');
                     td.className = 'centered';
-                    $(td).text(data[kind][i][columns[j]]);
+                    $(td).text(items[i][columns[j]]);
                     tr.appendChild(td);
                 }
             }
@@ -504,7 +548,7 @@
                     },
                 },
                 sortList: [ [1,0] ],
-            }); 
+            });
 
             updateArmorsCounter(kind);
         }
@@ -1291,13 +1335,13 @@
                 </div>
             </div>
 
-            <div class="panel panel-info">
+            <div class="panel panel-info" id="panel_helms">
                 <div class="panel-heading">
                     <h3 class="panel-title">
                         <a role="button" class="collapsed" data-toggle="collapse" data-parent="#accordion"
                            href="#available_helms" aria-expanded="false" aria-controls="available_helms">
-                            Available helms
-                            <span id="nb_available_helms">(0)</span>
+                            Single helms
+                            <span id="nb_available_helms">(0/0)</span>
                             <span class="glyphicon glyphicon-menu-down" aria-hidden="true"></span>
                             <span class="glyphicon glyphicon-menu-up" aria-hidden="true"></span>
                         </a>
@@ -1307,13 +1351,13 @@
                 </div>
             </div>
 
-            <div class="panel panel-info">
+            <div class="panel panel-info" id="panel_chests">
                 <div class="panel-heading">
                     <h3 class="panel-title">
                         <a role="button" class="collapsed" data-toggle="collapse" data-parent="#accordion"
                            href="#available_chests" aria-expanded="false" aria-controls="available_chests">
-                            Available chests
-                            <span id="nb_available_chests">(0)</span>
+                            Single chests
+                            <span id="nb_available_chests">(0/0)</span>
                             <span class="glyphicon glyphicon-menu-down" aria-hidden="true"></span>
                             <span class="glyphicon glyphicon-menu-up" aria-hidden="true"></span>
                         </a>
@@ -1323,13 +1367,13 @@
                 </div>
             </div>
 
-            <div class="panel panel-info">
+            <div class="panel panel-info" id="panel_gauntlets">
                 <div class="panel-heading">
                     <h3 class="panel-title">
                         <a role="button" class="collapsed" data-toggle="collapse" data-parent="#accordion"
                            href="#available_gauntlets" aria-expanded="false" aria-controls="available_gauntlets">
-                            Available gauntlets
-                            <span id="nb_available_gauntlets">(0)</span>
+                            Single gauntlets
+                            <span id="nb_available_gauntlets">(0/0)</span>
                             <span class="glyphicon glyphicon-menu-down" aria-hidden="true"></span>
                             <span class="glyphicon glyphicon-menu-up" aria-hidden="true"></span>
                         </a>
@@ -1339,13 +1383,13 @@
                 </div>
             </div>
 
-            <div class="panel panel-info">
+            <div class="panel panel-info" id="panel_leggings">
                 <div class="panel-heading">
                     <h3 class="panel-title">
                         <a role="button" class="collapsed" data-toggle="collapse" data-parent="#accordion"
                            href="#available_leggings" aria-expanded="false" aria-controls="available_leggings">
-                            Available leggings
-                            <span id="nb_available_leggings">(0)</span>
+                            Single leggings
+                            <span id="nb_available_leggings">(0/0)</span>
                             <span class="glyphicon glyphicon-menu-down" aria-hidden="true"></span>
                             <span class="glyphicon glyphicon-menu-up" aria-hidden="true"></span>
                         </a>
@@ -1394,21 +1438,29 @@
                 try { localStorage.setItem(THEME_KEY, theme); } catch (e) {}
             });
 
-            // Load the list of armor items
-            $.getJSON('data/armors.json', function(resp) {
-                ref_armors = resp;
-                pruneUnknownArmors();
+            // Builds the tables and the search, once the data is loaded
+            function start(sets)
+            {
+                var used = setupSetsTable($('#available_sets')[0], sets);
 
-                setupArmorTable($('#available_helms')[0], 'helms', resp);
-                setupArmorTable($('#available_chests')[0], 'chests', resp);
-                setupArmorTable($('#available_gauntlets')[0], 'gauntlets', resp);
-                setupArmorTable($('#available_leggings')[0], 'leggings', resp);
+                // Only the items that are not part of a set get their own table
+                var kinds = ['helms', 'chests', 'gauntlets', 'leggings'];
+                for (var k = 0; k < kinds.length; ++k)
+                {
+                    var items = [];
 
-                $.getJSON('data/sets.json', function(sets) {
-                    setupSetsTable($('#available_sets')[0], sets);
-                }).fail(function() {
-                    $('#sets_panel').hide();
-                });
+                    for (var i = 0; i < ref_armors[kinds[k]].length; ++i)
+                    {
+                        var item = ref_armors[kinds[k]][i];
+                        if (used[kinds[k]][item.name] !== true)
+                        {
+                            items.push(item);
+                            single_armors[kinds[k]].push(item.name);
+                        }
+                    }
+
+                    setupArmorTable($('#available_' + kinds[k])[0], kinds[k], items);
+                }
 
                 $('#btn_search').click(function() {
                     $('#results_panel').show();
@@ -1453,6 +1505,17 @@
                 var equipped_armor_style = getEquippedArmorSet();
                 if (equipped_armor_style !== null)
                     changeEquipment(equipped_armor_style);
+            }
+
+            // Load the armor items, then the armor sets
+            $.getJSON('data/armors.json', function(resp) {
+                ref_armors = resp;
+                pruneUnknownArmors();
+
+                $.getJSON('data/sets.json').done(start).fail(function() {
+                    $('#sets_panel').hide();
+                    start([]);
+                });
             });
         });
     </script>

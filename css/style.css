@@ -85,25 +85,47 @@ table.armor-list td.downgrade
 }
 
 
-table.armor-list img.armor-set-icon
+table.armor-list td.armor-set-title
 {
-    margin-right: 4px;
-}
-
-
-table.armor-list .armor-set-gap
-{
-    display: inline-block;
-    width: 32px;
-    margin-right: 4px;
+    min-width: 9em;
 }
 
 
 table.armor-list .armor-set-name
 {
-    margin-left: 10px;
+    font-weight: bold;
     margin-right: 6px;
 }
+
+
+table.armor-list td.armor-set-piece
+{
+    vertical-align: middle;
+}
+
+
+label.armor-piece
+{
+    display: flex;
+    align-items: center;
+    margin: 0;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+
+label.armor-piece input[type=checkbox]
+{
+    margin: 0 8px 0 0;
+    flex: none;
+}
+
+
+table.armor-list label.armor-piece img.armor-icon
+{
+    flex: none;
+}
+
 
 /* ------------------------------------------------------------------ */
 /* Dark theme (toggled through <html data-theme="dark">)               */
