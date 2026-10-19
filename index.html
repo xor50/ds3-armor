@@ -491,6 +491,7 @@
                 td.appendChild(count_label);
 
                 var armor_set = {
+                    name: sets[i].name,
                     pieces: pieces,
                     checkbox: checkbox,
                     count_label: count_label,
@@ -973,8 +974,112 @@
         }
 
 
-        function optimize()
+        // Finds the best whole sets: the sets of which every piece is owned, and that have a piece for each of the
+        // 4 slots (sets with fewer items are ignored). The scoring is the one of findBestSets(), over these sets only.
+        // Returns { results: [armor sets, best first], eligible: number of complete 4-slot sets }
+        function findBestWholeSets(criteria, max_total_weight)
         {
+            var kinds = ['helms', 'chests', 'gauntlets', 'leggings'];
+            var candidates = [];
+            var eligible = 0;
+
+            for (var i = 0; i < armor_sets_ui.length; ++i)
+            {
+                var ui_set = armor_sets_ui[i];
+
+                if (countOwnedPieces(ui_set) !== ui_set.pieces.length)
+                    continue;
+
+                // The items of each slot (several if the set has alternatives, like the 2 helms of the Black Witch Set)
+                var slots = [];
+                for (var k = 0; k < kinds.length; ++k)
+                {
+                    var slot = [];
+                    for (var p = 0; p < ui_set.pieces.length; ++p)
+                    {
+                        if (ui_set.pieces[p].kind === kinds[k])
+                            slot.push(getArmorIndex(kinds[k], ui_set.pieces[p].name));
+                    }
+
+                    if (slot.length > 0)
+                        slots.push(slot);
+                }
+
+                if (slots.length < kinds.length)
+                    continue;
+
+                ++eligible;
+
+                // One candidate per combination of alternatives
+                for (var h = 0; h < slots[0].length; ++h)
+                {
+                    for (var c = 0; c < slots[1].length; ++c)
+                    {
+                        for (var g = 0; g < slots[2].length; ++g)
+                        {
+                            for (var l = 0; l < slots[3].length; ++l)
+                            {
+                                var armor_set = createArmorSet(slots[0][h], slots[1][c], slots[2][g], slots[3][l]);
+                                armor_set.set_name = ui_set.name;
+
+                                if (armor_set.weight <= max_total_weight + EPSILON)
+                                    candidates.push(armor_set);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Normalize each criterion over the candidates (see findBestSets()) and score them
+            var mins = [];
+            var maxs = [];
+            for (var k = 0; k < criteria.length; ++k)
+            {
+                mins.push(Infinity);
+                maxs.push(-Infinity);
+
+                for (var n = 0; n < candidates.length; ++n)
+                {
+                    var value = candidates[n][criteria[k].name];
+                    if (value < mins[k]) mins[k] = value;
+                    if (value > maxs[k]) maxs[k] = value;
+                }
+            }
+
+            for (var n = 0; n < candidates.length; ++n)
+            {
+                var score = 0.0;
+
+                for (var k = 0; k < criteria.length; ++k)
+                {
+                    var range = maxs[k] - mins[k];
+                    if (range > 0)
+                        score += criteria[k].weight * (candidates[n][criteria[k].name] - mins[k]) / range;
+                }
+
+                candidates[n].score = score;
+                candidates[n].order = n;
+            }
+
+            // Best first (ties keep the order of the set list)
+            candidates.sort(function(a, b) { return (b.score - a.score) || (a.order - b.order); });
+
+            return { results: candidates.slice(0, MAX_RESULTS), eligible: eligible };
+        }
+
+
+        // mode: 'gear' (best combination of items) or 'set' (best whole set)
+        function showResultsMode(mode)
+        {
+            $('#results').toggleClass('hide-set-column', mode !== 'set');
+            $('#results_title').text(mode === 'set' ? 'Results: best whole sets' : 'Results: best gear combinations');
+        }
+
+
+        function optimize(mode)
+        {
+            showResultsMode(mode);
+
             var max_equip_load = Number($('#max_equip_load').val());
             var limit_equip_load = Number($('#limit_equip_load').val());
             var other_load = getOtherLoad();
@@ -1002,13 +1107,36 @@
                 $('#criterion3').val(),
             ]);
 
-            var results = findBestSets(criteria, max_total_equip_load);
+            var results;
 
-            if (results.length === 0)
+            if (mode === 'set')
             {
-                message.text('No armor set found. Mark at least one item of each kind as owned, ' +
-                             'or raise the equip load limit.').show();
-                return;
+                var found = findBestWholeSets(criteria, max_total_equip_load);
+                results = found.results;
+
+                if (found.eligible === 0)
+                {
+                    message.text('No complete set found. Mark all the pieces of a set as owned in the list of armor sets ' +
+                                 '(sets with fewer than 4 items are ignored).').show();
+                    return;
+                }
+
+                if (results.length === 0)
+                {
+                    message.text('None of your complete sets fits under the equip load limit.').show();
+                    return;
+                }
+            }
+            else
+            {
+                results = findBestSets(criteria, max_total_equip_load);
+
+                if (results.length === 0)
+                {
+                    message.text('No armor set found. Mark at least one item of each kind as owned, ' +
+                                 'or raise the equip load limit.').show();
+                    return;
+                }
             }
 
             var equipped_set = getEquippedArmorSet();
@@ -1063,6 +1191,12 @@
                 td.appendChild(equip_button);
                 $(equip_button).tooltip({ container: 'body', placement: 'right', trigger: 'hover focus' });
 
+                // Name of the set (only shown for the results of "Find best set")
+                var set_cell = document.createElement('td');
+                set_cell.className = 'col-set';
+                $(set_cell).text(armor_set.set_name !== undefined ? armor_set.set_name : '');
+                tr.appendChild(set_cell);
+
                 var span = document.createElement('span');
                 span.className = 'glyphicon glyphicon-pushpin';
                 equip_button.appendChild(span);
@@ -1078,7 +1212,7 @@
 
                         for (var j = 0; j < all_columns.length; ++j)
                         {
-                            var column = $(columns[j + 5]);
+                            var column = $(columns[j + 6]);
                             column.removeClass('downgrade');
                             column.removeClass('upgrade');
 
@@ -1091,7 +1225,7 @@
                                 column.addClass('downgrade');
                         }
 
-                        column = $(columns[all_columns.length + 5]);
+                        column = $(columns[all_columns.length + 6]);
                         column.removeClass('downgrade');
                         column.removeClass('upgrade');
 
@@ -1348,7 +1482,8 @@
                         </select>
                     </div>
 
-                    <button type="button" class="btn btn-success" id="btn_search">Search</button>
+                    <button type="button" class="btn btn-success" id="btn_find_gear">Find best gear</button>
+                    <button type="button" class="btn btn-success" id="btn_find_set">Find best set</button>
                     </div>
                 </form>
             </div>
@@ -1397,15 +1532,16 @@
 
         <div id="results_panel" class="panel panel-success" style="display:none;">
             <div class="panel-heading">
-                <h3 class="panel-title">Results</h3>
+                <h3 class="panel-title" id="results_title">Results</h3>
             </div>
             <div class="panel-body">
                 <div id="results_message" class="alert alert-warning" style="display:none;"></div>
 
-                <table id="results" class="table table-hover table-bordered armor-list tablesorter">
+                <table id="results" class="table table-hover table-bordered armor-list tablesorter hide-set-column">
                     <thead>
                         <tr>
                             <th></th>
+                            <th class="col-set"></th>
                             <th colspan="4"></th>
                             <th colspan="4">Physical defenses</th>
                             <th colspan="4">Elemental defenses</th>
@@ -1414,6 +1550,7 @@
                         </tr>
                         <tr>
                             <th></th>
+                            <th class="col-set">Set</th>
                             <th>Helm</th>
                             <th>Chest</th>
                             <th>Gloves</th>
@@ -1551,7 +1688,7 @@
                 if (e.which === 13)
                 {
                     e.preventDefault();
-                    $('#btn_search').click();
+                    $('#btn_find_gear').click();
                 }
             });
 
@@ -1587,44 +1724,27 @@
                     setupArmorTable($('#available_' + kinds[k])[0], kinds[k], items);
                 }
 
-                $('#btn_search').click(function() {
+                function search(mode)
+                {
                     $('#results_panel').show();
 
                     saveParameters();
-                    optimize();
+                    optimize(mode);
+                }
+
+                $('#btn_find_gear').click(function() { search('gear'); });
+                $('#btn_find_set').click(function() { search('set'); });
+
+                // Only the columns of the stats (the headers with an icon) can be sorted. The numbers of the 'headers'
+                // option are the positions of the <th> elements in the whole <thead> (all rows), not column numbers:
+                // they are computed instead of being written down, so that adding a column can't break them.
+                var sorter_headers = {};
+                $('#results thead th').each(function(index) {
+                    if ($(this).find('img').length === 0)
+                        sorter_headers[index] = { sorter: false };
                 });
 
-                $('#results').tablesorter({
-                    headers: {
-                        0: {
-                            sorter: false,
-                        },
-                        1: {
-                            sorter: false
-                        },
-                        2: {
-                            sorter: false
-                        },
-                        3: {
-                            sorter: false
-                        },
-                        4: {
-                            sorter: false
-                        },
-                        5: {
-                            sorter: false,
-                        },
-                        6: {
-                            sorter: false,
-                        },
-                        7: {
-                            sorter: false,
-                        },
-                        8: {
-                            sorter: false,
-                        },
-                    },
-                }); 
+                $('#results').tablesorter({ headers: sorter_headers });
 
 
                 var equipped_armor_style = getEquippedArmorSet();

@@ -205,6 +205,18 @@ td.clickable-cell
     user-select: none;
 }
 
+/* The "Set" column of the results is only shown for the results of "Find best set" */
+#results.hide-set-column .col-set
+{
+    display: none;
+}
+
+
+td.col-set
+{
+    font-weight: bold;
+}
+
 /* ------------------------------------------------------------------ */
 /* Dark theme (toggled through <html data-theme="dark">)               */
 /* ------------------------------------------------------------------ */
