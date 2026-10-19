@@ -114,6 +114,12 @@ label.armor-piece
 }
 
 
+label.armor-piece + label.armor-piece
+{
+    margin-top: 6px;
+}
+
+
 label.armor-piece input[type=checkbox]
 {
     margin: 0 8px 0 0;

@@ -72,6 +72,11 @@ MANUAL_SETS = {
         'gauntlets': 'Gauntlets of Favor',
         'leggings': 'Leggings of Favor',    # not in armors.json (yet)
     },
+    'Antiquated Plain Set': {
+        'chests': 'Antiquated Plain Garb',
+        'gauntlets': 'Violet Wrappings',
+        'leggings': 'Loincloth (DLC)',
+    },
     'Armor of the Sun Set': {
         'helms': 'Iron Helm',
         'chests': 'Armor of the Sun',
@@ -80,9 +85,11 @@ MANUAL_SETS = {
     },
 }
 
-# Groups that contain several items of the same kind: which one belongs to the set
-# (the others are left out of it). Empty for now: add entries when the script complains.
+# Groups that contain several items of the same kind (and would otherwise be a set).
+# The value is the item that belongs to the set (the others are left out of it), or a list of items
+# when the set really has alternatives for that slot (they are then all part of the set).
 AMBIGUOUS = {
+    ('Black Witch', 'helms'): ['Black Witch Hat', 'Black Witch Veil'],
 }
 
 
@@ -132,6 +139,10 @@ def main():
     for stem in sorted(groups):
         pieces = {}
 
+        # Groups with items of a single kind only (e.g. "Loincloth" and "Loincloth (DLC)") are no sets
+        if sum(1 for kind in KINDS if groups[stem].get(kind)) < 2:
+            continue
+
         for kind in KINDS:
             names = groups[stem].get(kind, [])
 
@@ -140,10 +151,12 @@ def main():
                 if chosen is None:
                     problems.append('"%s" has several %s: %s' % (stem, kind, ', '.join(names)))
                     continue
-                names = [chosen]
+                names = chosen if isinstance(chosen, list) else [chosen]
 
-            if names:
+            if len(names) == 1:
                 pieces[kind] = names[0]
+            elif len(names) > 1:
+                pieces[kind] = names
 
         if len(pieces) >= 2:
             sets.append({ 'name': stem + ' Set', 'pieces': pieces })
@@ -158,10 +171,11 @@ def main():
     # Sanity checks: every item exists, and belongs to at most one set
     seen = set()
     for s in sets:
-        for kind, name in s['pieces'].items():
-            assert name in known[kind], name
-            assert (kind, name) not in seen, 'in several sets: ' + name
-            seen.add((kind, name))
+        for kind, value in s['pieces'].items():
+            for name in (value if isinstance(value, list) else [value]):
+                assert name in known[kind], name
+                assert (kind, name) not in seen, 'in several sets: ' + name
+                seen.add((kind, name))
 
     with open('data/sets.json', 'w') as f:
         json.dump(sets, f, indent=4)

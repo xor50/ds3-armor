@@ -9,11 +9,20 @@
         }
     },
     {
+        "name": "Antiquated Plain Set",
+        "pieces": {
+            "chests": "Antiquated Plain Garb",
+            "gauntlets": "Violet Wrappings",
+            "leggings": "Loincloth (DLC)"
+        }
+    },
+    {
         "name": "Antiquated Set",
         "pieces": {
             "helms": "Crown of Dusk",
             "chests": "Antiquated Dress",
-            "gauntlets": "Antiquated Gloves"
+            "gauntlets": "Antiquated Gloves",
+            "leggings": "Antiquated Skirt"
         }
     },
     {
@@ -29,7 +38,8 @@
         "pieces": {
             "helms": "Helm of Favor",
             "chests": "Embraced Armor of Favor",
-            "gauntlets": "Gauntlets of Favor"
+            "gauntlets": "Gauntlets of Favor",
+            "leggings": "Leggings of Favor"
         }
     },
     {
@@ -91,6 +101,18 @@
             "chests": "Black Dress",
             "gauntlets": "Black Gauntlets",
             "leggings": "Black Leggings"
+        }
+    },
+    {
+        "name": "Black Witch Set",
+        "pieces": {
+            "helms": [
+                "Black Witch Hat",
+                "Black Witch Veil"
+            ],
+            "chests": "Black Witch Garb",
+            "gauntlets": "Black Witch Wrappings",
+            "leggings": "Black Witch Trousers"
         }
     },
     {
@@ -197,6 +219,15 @@
         "pieces": {
             "chests": "Deacon Robe",
             "leggings": "Deacon Skirt"
+        }
+    },
+    {
+        "name": "Desert Pyromancer Set",
+        "pieces": {
+            "helms": "Desert Pyromancer Hood",
+            "chests": "Desert Pyromancer Garb",
+            "gauntlets": "Desert Pyromancer Gloves",
+            "leggings": "Desert Pyromancer Skirt"
         }
     },
     {
@@ -318,7 +349,8 @@
         "pieces": {
             "helms": "Fire Witch Helm",
             "chests": "Fire Witch Armor",
-            "gauntlets": "Fire Witch Gauntlets"
+            "gauntlets": "Fire Witch Gauntlets",
+            "leggings": "Fire Witch Leggings"
         }
     },
     {
@@ -331,10 +363,20 @@
         }
     },
     {
+        "name": "Follower Set",
+        "pieces": {
+            "helms": "Follower Helm",
+            "chests": "Follower Armor",
+            "gauntlets": "Follower Gloves",
+            "leggings": "Follower Boots"
+        }
+    },
+    {
         "name": "Grave Warden Set",
         "pieces": {
             "helms": "Grave Warden Hood",
             "chests": "Grave Warden Robe",
+            "gauntlets": "Grave Warden Wrap",
             "leggings": "Grave Warden Skirt"
         }
     },
@@ -345,6 +387,14 @@
             "chests": "Gundyr's Armor",
             "gauntlets": "Gundyr's Gauntlets",
             "leggings": "Gundyr's Leggings"
+        }
+    },
+    {
+        "name": "Harald Legion Set",
+        "pieces": {
+            "chests": "Harald Legion Armor",
+            "gauntlets": "Harald Legion Gauntlets",
+            "leggings": "Harald Legion Leggings"
         }
     },
     {
@@ -374,10 +424,20 @@
         }
     },
     {
+        "name": "Iron Dragonslayer Set",
+        "pieces": {
+            "helms": "Iron Dragonslayer Helm",
+            "chests": "Iron Dragonslayer Armor",
+            "gauntlets": "Iron Dragonslayer Gauntlets",
+            "leggings": "Iron Dragonslayer Leggings"
+        }
+    },
+    {
         "name": "Jailer Set",
         "pieces": {
             "helms": "Aristocrat's Mask",
             "chests": "Jailer Robe",
+            "gauntlets": "Jailer Gloves",
             "leggings": "Jailer Trousers"
         }
     },
@@ -397,6 +457,15 @@
             "chests": "Knight Armor",
             "gauntlets": "Knight Gauntlets",
             "leggings": "Knight Leggings"
+        }
+    },
+    {
+        "name": "Lapp's Set",
+        "pieces": {
+            "helms": "Lapp's Helm",
+            "chests": "Lapp's Armor",
+            "gauntlets": "Lapp's Gauntlets",
+            "leggings": "Lapp's Leggings"
         }
     },
     {
@@ -449,6 +518,15 @@
         "pieces": {
             "chests": "Master's Attire",
             "gauntlets": "Master's Gloves"
+        }
+    },
+    {
+        "name": "Millwood Knight Set",
+        "pieces": {
+            "helms": "Millwood Knight Helm",
+            "chests": "Millwood Knight Armor",
+            "gauntlets": "Millwood Knight Gauntlets",
+            "leggings": "Millwood Knight Leggings"
         }
     },
     {
@@ -506,6 +584,14 @@
         }
     },
     {
+        "name": "Ordained Set",
+        "pieces": {
+            "helms": "Ordained Hood",
+            "chests": "Ordained Dress",
+            "leggings": "Ordained Trousers"
+        }
+    },
+    {
         "name": "Outrider Knight Set",
         "pieces": {
             "helms": "Outrider Knight Helm",
@@ -559,11 +645,30 @@
         }
     },
     {
+        "name": "Ringed Knight Set",
+        "pieces": {
+            "helms": "Ringed Knight Hood",
+            "chests": "Ringed Knight Armor",
+            "gauntlets": "Ringed Knight Gauntlets",
+            "leggings": "Ringed Knight Leggings"
+        }
+    },
+    {
+        "name": "Ruin Sentinel Set",
+        "pieces": {
+            "helms": "Ruin Sentinel Helm",
+            "chests": "Ruin Sentinel Armor",
+            "gauntlets": "Ruin Sentinel Gauntlets",
+            "leggings": "Ruin Sentinel Leggings"
+        }
+    },
+    {
         "name": "Sellsword Set",
         "pieces": {
             "helms": "Sellsword Helm",
             "chests": "Sellsword Armor",
-            "gauntlets": "Sellsword Gauntlet"
+            "gauntlets": "Sellsword Gauntlet",
+            "leggings": "Sellsword Trousers"
         }
     },
     {
@@ -576,12 +681,30 @@
         }
     },
     {
+        "name": "Shira's Set",
+        "pieces": {
+            "helms": "Shira's Crown",
+            "chests": "Shira's Armor",
+            "gauntlets": "Shira's Gloves",
+            "leggings": "Shira's Trousers"
+        }
+    },
+    {
         "name": "Silver Knight Set",
         "pieces": {
             "helms": "Silver Knight Helm",
             "chests": "Silver Knight Armor",
             "gauntlets": "Silver Knight Gauntlets",
             "leggings": "Silver Knight Leggings"
+        }
+    },
+    {
+        "name": "Slave Knight Set",
+        "pieces": {
+            "helms": "Slave Knight Hood",
+            "chests": "Slave Knight Armor",
+            "gauntlets": "Slave Knight Gauntlets",
+            "leggings": "Slave Knight Leggings"
         }
     },
     {
@@ -636,6 +759,15 @@
             "chests": "Undead Legion Armor",
             "gauntlets": "Undead Legion Gauntlet",
             "leggings": "Undead Legion Leggings"
+        }
+    },
+    {
+        "name": "Vilhelm's Set",
+        "pieces": {
+            "helms": "Vilhelm's Helm",
+            "chests": "Vilhelm's Armor",
+            "gauntlets": "Vilhelm's Gauntlets",
+            "leggings": "Vilhelm's Leggings"
         }
     },
     {

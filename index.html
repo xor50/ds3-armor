@@ -260,7 +260,9 @@
 
             var owned = (user_data.available_armors[kind].indexOf(name) >= 0);
             input.checked = owned;
-            $(highlight).toggleClass(highlight_class, owned);
+
+            if (owned)
+                $(highlight).addClass(highlight_class);
 
             if (armor_checkboxes[kind][name] === undefined)
                 armor_checkboxes[kind][name] = [];
@@ -304,7 +306,11 @@
                 for (var i = 0; i < entries.length; ++i)
                 {
                     entries[i].input.checked = owned;
-                    $(entries[i].highlight).toggleClass(entries[i].highlight_class, owned);
+
+                    // The highlighted element (a table cell or row) may hold several items: it is highlighted
+                    // as long as one of them is owned
+                    var any_owned = ($(entries[i].highlight).find('input[type=checkbox]:checked').length > 0);
+                    $(entries[i].highlight).toggleClass(entries[i].highlight_class, any_owned);
                 }
             }
         }
@@ -440,9 +446,18 @@
                 var pieces = [];
                 for (var j = 0; j < kinds.length; ++j)
                 {
-                    var name = sets[i].pieces[kinds[j]];
-                    if (name !== undefined && lookup[kinds[j]][name] !== undefined)
-                        pieces.push({ kind: kinds[j], name: name, item: lookup[kinds[j]][name] });
+                    // A slot holds one item, or several alternatives (an array of names)
+                    var names = sets[i].pieces[kinds[j]];
+                    if (names === undefined)
+                        continue;
+                    if (typeof names === 'string')
+                        names = [names];
+
+                    for (var m = 0; m < names.length; ++m)
+                    {
+                        if (lookup[kinds[j]][names[m]] !== undefined)
+                            pieces.push({ kind: kinds[j], name: names[m], item: lookup[kinds[j]][names[m]] });
+                    }
                 }
 
                 if (pieces.length < 2)
@@ -495,35 +510,40 @@
                     td.className = 'armor-set-piece';
                     tr.appendChild(td);
 
-                    var piece = null;
+                    var slot_pieces = [];
                     for (var p = 0; p < pieces.length; ++p)
                     {
                         if (pieces[p].kind === kinds[c])
-                            piece = pieces[p];
+                            slot_pieces.push(pieces[p]);
                     }
 
-                    if (piece === null)
-                        continue;
+                    for (var q = 0; q < slot_pieces.length; ++q)
+                    {
+                        var piece = slot_pieces[q];
 
-                    used[piece.kind][piece.name] = true;
-                    search += ' ' + piece.name;
+                        used[piece.kind][piece.name] = true;
+                        search += ' ' + piece.name;
 
-                    var label = document.createElement('label');
-                    label.className = 'armor-piece';
-                    td.appendChild(label);
+                        var label = document.createElement('label');
+                        label.className = 'armor-piece';
+                        td.appendChild(label);
 
-                    var piece_checkbox = createOwnedCheckbox(piece.kind, piece.name, td, 'bg-warning');
-                    label.appendChild(piece_checkbox);
-                    makeCellToggle(td, piece_checkbox);
+                        var piece_checkbox = createOwnedCheckbox(piece.kind, piece.name, td, 'bg-warning');
+                        label.appendChild(piece_checkbox);
 
-                    var img = document.createElement('img');
-                    img.className = 'armor-icon';
-                    img.src = 'images/' + (piece.item.image != null ? piece.item.image : 'placeholder-icon.png');
-                    label.appendChild(img);
+                        // With several alternatives in the same cell, only the labels toggle (not the whole cell)
+                        if (slot_pieces.length === 1)
+                            makeCellToggle(td, piece_checkbox);
 
-                    var piece_name = document.createElement('span');
-                    $(piece_name).text(piece.name);
-                    label.appendChild(piece_name);
+                        var img = document.createElement('img');
+                        img.className = 'armor-icon';
+                        img.src = 'images/' + (piece.item.image != null ? piece.item.image : 'placeholder-icon.png');
+                        label.appendChild(img);
+
+                        var piece_name = document.createElement('span');
+                        $(piece_name).text(piece.name);
+                        label.appendChild(piece_name);
+                    }
                 }
 
                 armor_set.search = search.toLowerCase();
