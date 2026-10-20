@@ -809,6 +809,7 @@
 
 
         // Finds the best armor sets under the given weight, ranked by the weighted criteria.
+        // They are made of the owned items, or of the items of 'pool' ({ helms: [indices], ... }) if it is given.
         //
         // Each criterion is first normalized to [0, 1] over all the sets that fit under the weight limit
         // (0 = the worst such set, 1 = the best one), so that stats with very different scales
@@ -819,7 +820,7 @@
         // and keeps the best ones). The stats are accumulated along the nested loops (products of
         // (1 - absorption) for the absorption stats, sums for the others) so that each set costs only a
         // handful of operations, even when hundreds of thousands of sets are examined.
-        function findBestSets(criteria, max_total_weight)
+        function findBestSets(criteria, max_total_weight, pool)
         {
             var kinds = ['helms', 'chests', 'gauntlets', 'leggings'];
             var K = criteria.length;
@@ -834,7 +835,7 @@
             var slots = [];
             for (var s = 0; s < kinds.length; ++s)
             {
-                var indices = getOwnedIndices(kinds[s]);
+                var indices = (pool !== undefined) ? pool[kinds[s]] : getOwnedIndices(kinds[s]);
                 if (indices.length === 0)
                     return [];
 
@@ -1068,11 +1069,71 @@
         }
 
 
-        // mode: 'gear' (best combination of items) or 'set' (best whole set)
+        // The items of the "theoretical" search: the owned items, and the items the user doesn't own yet but could get
+        // because they belong to a set of which at least one piece is owned.
+        // Returns { indices: { helms: [indices], ... }, extra: number of unowned items, sets: number of sets they come from }
+        function getTheoreticalPool()
+        {
+            var kinds = ['helms', 'chests', 'gauntlets', 'leggings'];
+            var names = { helms: {}, chests: {}, gauntlets: {}, leggings: {} };
+            var extra = 0;
+            var sets = 0;
+
+            for (var k = 0; k < kinds.length; ++k)
+            {
+                for (var i = 0; i < user_data.available_armors[kinds[k]].length; ++i)
+                    names[kinds[k]][user_data.available_armors[kinds[k]][i]] = true;
+            }
+
+            for (var i = 0; i < armor_sets_ui.length; ++i)
+            {
+                if (countOwnedPieces(armor_sets_ui[i]) === 0)
+                    continue;
+
+                var added = false;
+                for (var p = 0; p < armor_sets_ui[i].pieces.length; ++p)
+                {
+                    var piece = armor_sets_ui[i].pieces[p];
+                    if (names[piece.kind][piece.name] !== true)
+                    {
+                        names[piece.kind][piece.name] = true;
+                        ++extra;
+                        added = true;
+                    }
+                }
+
+                if (added)
+                    ++sets;
+            }
+
+            var indices = {};
+            for (var k = 0; k < kinds.length; ++k)
+            {
+                indices[kinds[k]] = [];
+                for (var i = 0; i < ref_armors[kinds[k]].length; ++i)
+                {
+                    if (names[kinds[k]][ref_armors[kinds[k]][i].name] === true)
+                        indices[kinds[k]].push(i);
+                }
+            }
+
+            return { indices: indices, extra: extra, sets: sets };
+        }
+
+
+        // mode: 'gear' (best combination of items), 'set' (best whole set)
+        // or 'theoretical' (best combination, if the user had the missing pieces of the sets he/she started)
         function showResultsMode(mode)
         {
+            var titles = {
+                gear: 'Results: best gear combinations',
+                set: 'Results: best whole sets',
+                theoretical: 'Results: best theoretical gear',
+            };
+
             $('#results').toggleClass('hide-set-column', mode !== 'set');
-            $('#results_title').text(mode === 'set' ? 'Results: best whole sets' : 'Results: best gear combinations');
+            $('#results_title').text(titles[mode]);
+            $('#results_note').hide();
         }
 
 
@@ -1127,6 +1188,31 @@
                     return;
                 }
             }
+            else if (mode === 'theoretical')
+            {
+                var pool = getTheoreticalPool();
+
+                if (pool.extra === 0)
+                {
+                    message.text('Nothing to suggest: there is no unowned piece to consider. Pieces are only suggested ' +
+                                 'for the sets of which you own at least one piece (and that are not complete yet).').show();
+                    return;
+                }
+
+                results = findBestSets(criteria, max_total_equip_load, pool.indices);
+
+                if (results.length === 0)
+                {
+                    message.text('No armor set found. Your items and the pieces of your started sets do not cover ' +
+                                 'all the slots, or are too heavy for the equip load limit.').show();
+                    return;
+                }
+
+                $('#results_note').text('The pieces marked "not owned" are the ones you would have to get. Only pieces of sets ' +
+                                        'of which you already own at least one piece are considered (' +
+                                        pool.extra + (pool.extra === 1 ? ' more piece' : ' more pieces') + ', from ' +
+                                        pool.sets + (pool.sets === 1 ? ' set' : ' sets') + ').').show();
+            }
             else
             {
                 results = findBestSets(criteria, max_total_equip_load);
@@ -1166,6 +1252,35 @@
             addArmorSetToTable(tbody, armor_set);
 
             $('#equipped_panel').show();
+        }
+
+
+        // Adds the cell of an armor item (icon and name) to a row of a table of results.
+        // The items that are not owned (suggested by "Find best theoretical gear") are marked.
+        function addPieceCell(tr, name, image, owned)
+        {
+            var td = document.createElement('td');
+            tr.appendChild(td);
+
+            var img = document.createElement('img');
+            img.className = 'armor-icon';
+            img.src = 'images/' + (image != null ? image : 'placeholder-icon.png');
+            td.appendChild(img);
+
+            var span = document.createElement('span');
+            $(span).text(name);
+            td.appendChild(span);
+
+            if (owned === false)
+            {
+                td.className = 'unowned-item';
+                td.title = 'Not owned yet';
+
+                var tag = document.createElement('small');
+                tag.className = 'unowned-tag';
+                tag.textContent = 'not owned';
+                td.appendChild(tag);
+            }
         }
 
 
@@ -1240,53 +1355,10 @@
                 });
             }
 
-            td = document.createElement('td');
-            tr.appendChild(td);
-
-            var img = document.createElement('img');
-            img.className = 'armor-icon';
-            img.src = 'images/' + (armor_set.helm_image != null ? armor_set.helm_image : 'placeholder-icon.png') ;
-            td.appendChild(img);
-
-            span = document.createElement('span');
-            $(span).text(armor_set.helm_name);
-            td.appendChild(span);
-
-            td = document.createElement('td');
-            tr.appendChild(td);
-
-            var img = document.createElement('img');
-            img.className = 'armor-icon';
-            img.src = 'images/' + (armor_set.chest_image != null ? armor_set.chest_image : 'placeholder-icon.png') ;
-            td.appendChild(img);
-
-            span = document.createElement('span');
-            $(span).text(armor_set.chest_name);
-            td.appendChild(span);
-
-            td = document.createElement('td');
-            tr.appendChild(td);
-
-            var img = document.createElement('img');
-            img.className = 'armor-icon';
-            img.src = 'images/' + (armor_set.gauntlets_image != null ? armor_set.gauntlets_image : 'placeholder-icon.png') ;
-            td.appendChild(img);
-
-            span = document.createElement('span');
-            $(span).text(armor_set.gauntlets_name);
-            td.appendChild(span);
-
-            td = document.createElement('td');
-            tr.appendChild(td);
-
-            var img = document.createElement('img');
-            img.className = 'armor-icon';
-            img.src = 'images/' + (armor_set.legging_image != null ? armor_set.legging_image : 'placeholder-icon.png') ;
-            td.appendChild(img);
-
-            span = document.createElement('span');
-            $(span).text(armor_set.legging_name);
-            td.appendChild(span);
+            addPieceCell(tr, armor_set.helm_name, armor_set.helm_image, armor_set.helm_owned);
+            addPieceCell(tr, armor_set.chest_name, armor_set.chest_image, armor_set.chest_owned);
+            addPieceCell(tr, armor_set.gauntlets_name, armor_set.gauntlets_image, armor_set.gauntlets_owned);
+            addPieceCell(tr, armor_set.legging_name, armor_set.legging_image, armor_set.legging_owned);
 
             for (var j = 0; j < all_columns.length; ++j)
             {
@@ -1341,6 +1413,12 @@
                 gauntlets_image: gauntlets.image,
                 legging_name: legging.name,
                 legging_image: legging.image,
+
+                // Whether the user owns the items (the results of "Find best theoretical gear" can contain others)
+                helm_owned: user_data.available_armors.helms.indexOf(helm.name) >= 0,
+                chest_owned: user_data.available_armors.chests.indexOf(chest.name) >= 0,
+                gauntlets_owned: user_data.available_armors.gauntlets.indexOf(gauntlets.name) >= 0,
+                legging_owned: user_data.available_armors.leggings.indexOf(legging.name) >= 0,
             };
 
             for (var i = 0; i < all_columns.length; ++i)
@@ -1482,8 +1560,12 @@
                         </select>
                     </div>
 
-                    <button type="button" class="btn btn-success" id="btn_find_gear">Find best gear</button>
-                    <button type="button" class="btn btn-success" id="btn_find_set">Find best set</button>
+                    <button type="button" class="btn btn-success" id="btn_find_gear"
+                            title="The best combination of the items you own.">Find best gear</button>
+                    <button type="button" class="btn btn-success" id="btn_find_set"
+                            title="The best set among the sets you own completely.">Find best set</button>
+                    <button type="button" class="btn btn-info" id="btn_find_theoretical"
+                            title="The best combination if you also had the missing pieces of the sets of which you own at least one piece.">Find best theoretical gear</button>
                     </div>
                 </form>
             </div>
@@ -1535,6 +1617,7 @@
                 <h3 class="panel-title" id="results_title">Results</h3>
             </div>
             <div class="panel-body">
+                <div id="results_note" class="alert alert-info" style="display:none;"></div>
                 <div id="results_message" class="alert alert-warning" style="display:none;"></div>
 
                 <table id="results" class="table table-hover table-bordered armor-list tablesorter hide-set-column">
@@ -1734,6 +1817,7 @@
 
                 $('#btn_find_gear').click(function() { search('gear'); });
                 $('#btn_find_set').click(function() { search('set'); });
+                $('#btn_find_theoretical').click(function() { search('theoretical'); });
 
                 // Only the columns of the stats (the headers with an icon) can be sorted. The numbers of the 'headers'
                 // option are the positions of the <th> elements in the whole <thead> (all rows), not column numbers:

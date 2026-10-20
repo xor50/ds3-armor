@@ -217,6 +217,20 @@ td.col-set
     font-weight: bold;
 }
 
+/* Items of the results that the user doesn't own (suggested by "Find best theoretical gear") */
+td.unowned-item
+{
+    background-color: #d9edf7;
+}
+
+
+td.unowned-item .unowned-tag
+{
+    margin-left: 4px;
+    font-style: italic;
+    color: #31708f;
+}
+
 /* ------------------------------------------------------------------ */
 /* Dark theme (toggled through <html data-theme="dark">)               */
 /* ------------------------------------------------------------------ */
@@ -366,6 +380,8 @@ html[data-theme="dark"] .btn-success
 
 html[data-theme="dark"] .alert-warning
 {
+    background-image: none;
+    text-shadow: none;
     background-color: #4a4222;
     border-color: #7a6420;
     color: #f3e6b8;
@@ -406,4 +422,30 @@ html[data-theme="dark"] .dropdown-menu > .active > a:hover
 html[data-theme="dark"] .dropdown-menu .divider
 {
     background-color: #3a3f44;
+}
+
+html[data-theme="dark"] td.unowned-item
+{
+    background-color: #1f3a4a;
+}
+
+html[data-theme="dark"] td.unowned-item .unowned-tag
+{
+    color: #8cc4e0;
+}
+
+html[data-theme="dark"] .alert-info
+{
+    background-image: none;
+    text-shadow: none;
+    background-color: #1f3a4a;
+    border-color: #2c6577;
+    color: #cfe8f3;
+}
+
+html[data-theme="dark"] .btn-info
+{
+    background-image: none;
+    text-shadow: none;
+    box-shadow: none;
 }
