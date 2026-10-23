@@ -1284,13 +1284,85 @@
         }
 
 
+        // Compares a value with the one of another set the way they are displayed, i.e. rounded to one decimal:
+        // values that look the same are not colored (no matter the tiny differences of the underlying numbers).
+        // Returns 'upgrade' (better), 'downgrade' (worse) or '' (same)
+        function getComparisonClass(value, reference, higher_is_better)
+        {
+            var shown = Number(value.toFixed(1));
+            var shown_reference = Number(reference.toFixed(1));
+
+            if (shown === shown_reference)
+                return '';
+
+            return ((shown > shown_reference) === higher_is_better) ? 'upgrade' : 'downgrade';
+        }
+
+
+        // The equip load of an armor set in percent, including the weapons and rings (null if the parameters are invalid)
+        function getEquipLoadPercent(armor_set)
+        {
+            var max_equip_load = Number($('#max_equip_load').val());
+            var other_load = getOtherLoad();
+
+            if (!(max_equip_load > 0) || !isFinite(other_load))
+                return null;
+
+            return (armor_set.weight + other_load) / max_equip_load * 100;
+        }
+
+
+        // Fills the values of a row that depend on the parameters and on the equipped set: the equip load in percent,
+        // and the colors of the values that are better ('upgrade') or worse ('downgrade') than the ones of the equipped
+        // set (comparison_set, can be null). A lower weight / equip load is better, a higher value of everything else is.
+        function updateRowValues(tr, armor_set, comparison_set)
+        {
+            $(tr).find('td.stat').each(function() {
+                var stat = this.getAttribute('data-stat');
+
+                $(this).removeClass('upgrade downgrade');
+
+                if (comparison_set != null)
+                    $(this).addClass(getComparisonClass(armor_set[stat], comparison_set[stat], stat !== 'weight'));
+            });
+
+            var percent = getEquipLoadPercent(armor_set);
+            var comparison_percent = (comparison_set != null) ? getEquipLoadPercent(comparison_set) : null;
+
+            var cell = $(tr).find('td.equip-load-percent');
+            cell.removeClass('upgrade downgrade');
+            cell.text(percent !== null ? percent.toFixed(1) + '%' : '-');
+
+            if (percent !== null && comparison_percent !== null)
+                cell.addClass(getComparisonClass(percent, comparison_percent, false));
+        }
+
+
+        // Refreshes the values that depend on the parameters (max equip load, weapons, rings) and on the equipped set,
+        // in the table of the equipped set and in the table of the results
+        function refreshRows()
+        {
+            if (ref_armors === null)
+                return;
+
+            var equipped_set = getEquippedArmorSet();
+
+            $('#equipped tbody tr').each(function() {
+                updateRowValues(this, this.armorSet, null);
+            });
+
+            $('#results tbody tr').each(function() {
+                updateRowValues(this, this.armorSet, equipped_set);
+            });
+        }
+
+
         function addArmorSetToTable(tbody, armor_set, with_button, comparison_set)
         {
             var td;
-            var max_equip_load = Number($('#max_equip_load')[0].value);
-            var other_load = getOtherLoad();
 
             var tr = document.createElement('tr');
+            tr.armorSet = armor_set;
             tbody.appendChild(tr);
 
             if (with_button === true)
@@ -1318,40 +1390,7 @@
 
                 $(equip_button).click(function() {
                     changeEquipment(armor_set);
-
-                    var rows = $(tbody).find('tr');
-                    for (var row_index = 0; row_index < rows.length; ++row_index)
-                    {
-                        var row = rows[row_index];
-                        var columns = $(row).find('td');
-
-                        for (var j = 0; j < all_columns.length; ++j)
-                        {
-                            var column = $(columns[j + 6]);
-                            column.removeClass('downgrade');
-                            column.removeClass('upgrade');
-
-                            var value = Number(column.text());
-                            var ref = Number(armor_set[all_columns[j]].toFixed(1));
-
-                            if (value > ref)
-                                column.addClass('upgrade');
-                            else if (value < ref)
-                                column.addClass('downgrade');
-                        }
-
-                        column = $(columns[all_columns.length + 6]);
-                        column.removeClass('downgrade');
-                        column.removeClass('upgrade');
-
-                        var value = Number(column.text().substr(0, column.text().length - 1));
-                        var ref = Number(((armor_set.weight + other_load) / max_equip_load * 100).toFixed(1));
-
-                        if (value < ref)
-                            column.addClass('upgrade');
-                        else if (value > ref)
-                            column.addClass('downgrade');
-                    }
+                    refreshRows();
                 });
             }
 
@@ -1363,31 +1402,17 @@
             for (var j = 0; j < all_columns.length; ++j)
             {
                 td = document.createElement('td');
-                td.className = 'centered';
+                td.className = 'centered stat';
+                td.setAttribute('data-stat', all_columns[j]);
                 $(td).text(armor_set[all_columns[j]].toFixed(1));
                 tr.appendChild(td);
-
-                if (comparison_set != null)
-                {
-                    if (armor_set[all_columns[j]] > comparison_set[all_columns[j]])
-                        td.className += ' upgrade';
-                    else if (armor_set[all_columns[j]] < comparison_set[all_columns[j]])
-                        td.className += ' downgrade';
-                }
             }
 
             td = document.createElement('td');
-            td.className = 'centered';
-            $(td).text(((armor_set.weight + other_load) / max_equip_load * 100).toFixed(1) + '%');
+            td.className = 'centered equip-load-percent';
             tr.appendChild(td);
 
-            if (comparison_set != null)
-            {
-                if (armor_set.weight < comparison_set.weight)
-                    td.className += ' upgrade';
-                else if (armor_set.weight > comparison_set.weight)
-                    td.className += ' downgrade';
-            }
+            updateRowValues(tr, armor_set, comparison_set);
         }
 
 
@@ -1763,7 +1788,10 @@
             setupCriterionDropdowns();
 
             // Keep the parameters persistent as soon as they are edited
-            $('#max_equip_load, #limit_equip_load, #weapons_load, #rings_load').on('input change', saveParameters);
+            $('#max_equip_load, #limit_equip_load, #weapons_load, #rings_load').on('input change', function() {
+                saveParameters();
+                refreshRows();
+            });
             $('#criterion1, #criterion2, #criterion3').on('change', saveParameters);
 
             // Enter in a parameter field starts the search
